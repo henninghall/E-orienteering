@@ -21,12 +21,12 @@ TextureData ttex; // terrain
 
 float deltaTime = 20;
 float oldTimeSinceStart = 0;
-mat4 total, camMatrix,projectionMatrix;
+mat4 camMatrix,projectionMatrix;
 
 int time = 0;
-Model *m, *m2, *terrain, *groundSphere, *tree;
-GLuint program;
-GLuint tex1, tex2, texBranch, coconut;
+Model *m, *m2, *terrain, *groundSphere, *tree, *skyBox;
+GLuint program, skyBoxProgram;
+GLuint tex1, tex2, texBranch, coconut, skyBoxTex;
 vec3 cam = {0, 5, 0};
 vec3 position = { 0, 0, 5 };
 GLfloat speed = 0.01f; // 3 units / second
@@ -48,7 +48,7 @@ typedef struct Tree {
 
 
 void handleKeyPress(){
-//	printf("%f %f\n", distance, direction.x);
+	//	printf("%f %f\n", distance, direction.x);
 
 	if (glutKeyIsDown('w')) {
 		position.x += distance * direction.x;
@@ -72,10 +72,9 @@ void handleKeyPress(){
 	}
 }
 
-int numberOfTrees = 200;
+int numberOfTrees = 100;
 //Tree trees[100] = 100;
 Tree *trees;
-
 
 void init(void)
 {
@@ -89,6 +88,8 @@ void init(void)
 
 	// Load and compile shader
 	program = loadShaders("terrain-new.vert", "terrain-new.frag");
+	skyBoxProgram = loadShaders("skybox.vert", "skybox.frag");
+
 	glUseProgram(program);
 	printError("init shader");
 
@@ -98,6 +99,7 @@ void init(void)
 	LoadTGATextureSimple("SkyBox512.tga", &tex2);
 	LoadTGATextureSimple("grass.tga", &texBranch);
 	LoadTGATextureSimple("maskros512.tga", &coconut);
+
 
 
 	// Upload light sources to shader
@@ -113,6 +115,16 @@ void init(void)
 
 	groundSphere = LoadModelPlus("groundsphere.obj");
 	tree = LoadModelPlus("fir.obj");
+	skyBox = LoadModelPlus("skybox.obj");
+
+	glUseProgram(skyBoxProgram);
+	// Skybox texturea
+	LoadTGATextureSimple("SkyBox512.tga", &skyBoxTex);
+	glUniformMatrix4fv(glGetUniformLocation(skyBoxProgram, "projection"), 1, GL_TRUE, projectionMatrix.m);
+	glUniform1i(glGetUniformLocation(skyBoxProgram, "skyBoxTex"), 0);
+
+	glUseProgram(program);
+
 
 	// Generate random trees
 	int i;
@@ -132,7 +144,7 @@ void init(void)
 
 
 void draw(mat4 modelView, Model *m, GLuint texture){
-	total = Mult(camMatrix, modelView);
+	mat4 total = Mult(camMatrix, modelView);
 	glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
 	glUniformMatrix4fv(glGetUniformLocation(program, "modelView"), 1, GL_TRUE, modelView.m);
 	glBindTexture(GL_TEXTURE_2D, texture);		// Bind Our Texture tex1
@@ -224,8 +236,36 @@ void display(void) {
 	glutWarpPointer(300, 300);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	handleKeyPress();
-	updateCameraPos();
+
+
+
+	mat4 skyBoxLookAt = camMatrix;
+	skyBoxLookAt.m[3] = 0;
+	skyBoxLookAt.m[7] = 0;
+	skyBoxLookAt.m[11] = 0;
+	float s = 1;
+	float t = 0.2;
+	mat4 trans = T(t, t, t);
+  mat4 scale = S(s, s, s);
+	mat4 rot = Rx(3.14);
+  mat4 total = Mult(Mult(trans, scale),rot);
+
+
+	glUseProgram(skyBoxProgram);
+	glUniformMatrix4fv(glGetUniformLocation(skyBoxProgram, "lookAtMatrix"), 1, GL_TRUE, skyBoxLookAt.m);
+	glUniformMatrix4fv(glGetUniformLocation(skyBoxProgram, "mdlMatrix"), 1, GL_TRUE, total.m);
+	//glDisable(GL_CULL_FACE);
+	glDisable(GL_DEPTH_TEST);
+	glBindTexture(GL_TEXTURE_2D, skyBoxTex);
+	DrawModel(skyBox, skyBoxProgram, "in_Position", "in_Normal", "inTexCoord");
+	glEnable(GL_DEPTH_TEST);
+//	glEnable(GL_CULL_FACE);
+
+
 	glUseProgram(program);
+
+
+	updateCameraPos();
 
 	drawSphere();
 	drawTerrain();
@@ -259,7 +299,7 @@ int main(int argc, char **argv)
 	glutCreateWindow ("E-ol");
 	glutDisplayFunc(display);
 	//glutSetCursor(0);
-	init ();
+	init();
 	glutTimerFunc(20, &timer, 0);
 	glutPassiveMotionFunc(mouse);
 	glutMainLoop();
