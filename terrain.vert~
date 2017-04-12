@@ -23,7 +23,7 @@ void main(void)
 
 
 	//texCoord = inTexCoord;
-	normal = in_Normal;
+	normal = inNormal;
 
 	//fragVert = inPosition;
 

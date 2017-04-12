@@ -42,7 +42,7 @@ n_normal = normalize(normalMatrix * normal);
 fragPosition = vec3(mdlMatrix * vec4(fragVert, 1));
 
 
-for(int i = 0; i < 4; i++){
+for(int i = 2; i < 3; i++){
 	
 	
 	// diffuse
@@ -68,9 +68,9 @@ for(int i = 0; i < 4; i++){
 	shade = dot(n_normal, surfaceToLight); 
 	shade = clamp(shade, 0, 1);
 	vec4 surfaceColor = texture(texUnit, texCoord);
-	diffuseComponent = vec3(shade, shade, shade) * lightSourcesColorArr[i] ;//* surfaceColor.rgb ;
+	diffuseComponent = vec3(shade, shade, shade) * lightSourcesColorArr[i] * surfaceColor.rgb ;
 	
-
+	
 	// specular
 	vec3 incidenceVector = surfaceToLight;//normalize(surfacePosition - lightSourcesDirPosArr[i]);
 	vec3 reflectionVector = reflect(incidenceVector, n_normal); 
@@ -80,7 +80,7 @@ for(int i = 0; i < 4; i++){
 	vec3 specularComponent = specularCoefficient * surfaceColor.rgb * lightSourcesColorArr[i];
 
 
-	sumColor = sumColor + diffuseComponent + specularComponent;
+	sumColor = sumColor + diffuseComponent ;//+ specularComponent;
 }
 
 

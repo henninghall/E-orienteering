@@ -41,9 +41,9 @@ Model* GenerateTerrain(TextureData *tex)
   texCoordArray = malloc(sizeof(GLfloat) * 2 * vertexCount);
   indexArray = malloc(sizeof(GLuint) * triangleCount*3);
 
-  printf("bpp %d\n", tex->bpp);
-  printf("tex->width %d\n", tex->width);
-  printf("tex->height %d\n", tex->height);
+  //printf("bpp %d\n", tex->bpp);
+  //printf("tex->width %d\n", tex->width);
+  //printf("tex->height %d\n", tex->height);
   for (x = 0; x < tex->width; x++)
   for (z = 0; z < tex->height; z++)
   {
@@ -190,9 +190,9 @@ Model* GenerateTerrain(TextureData *tex)
             float dist2  = fabs(p.x - p2.x) + fabs(p.z - p2.z);
             float dist3  = fabs(p.x - p3.x) + fabs(p.z - p3.z);
 
-            printf("dist1 : %f\n", dist1);
-            printf("dist2 : %f\n", dist2);
-            printf("dist3 : %f\n", dist3);
+            //printf("dist1 : %f\n", dist1);
+            //printf("dist2 : %f\n", dist2);
+            //printf("dist3 : %f\n", dist3);
 
 
             float totalDist = dist1 + dist2 + dist3;
@@ -201,9 +201,9 @@ Model* GenerateTerrain(TextureData *tex)
             float weight2 = (totalDist-dist2)*(totalDist-dist2);
             float weight3 = (totalDist-dist3)*(totalDist-dist3);
 
-            printf("weight1 : %f\n", weight1);
-            printf("weight2 : %f\n", weight2);
-            printf("weight3 : %f\n", weight3);
+          //  printf("weight1 : %f\n", weight1);
+          //  printf("weight2 : %f\n", weight2);
+          //  printf("weight3 : %f\n", weight3);
 
 
             float totalWeight = weight1 + weight2 + weight3;

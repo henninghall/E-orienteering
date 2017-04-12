@@ -15,5 +15,6 @@
 #include "loadobj.h"
 #include "LoadTGA.h"
 
+
 float getGroundY(float xIn, float zIn, TextureData *tex);
 Model* GenerateTerrain(TextureData *tex);
