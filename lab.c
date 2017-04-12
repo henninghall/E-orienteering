@@ -19,12 +19,12 @@ Point3D lightSourcesDirectionsPositions[] = { {10.0f, 5.0f, 0.0f}, // Red light,
 
 TextureData ttex; // terrain
 
-float deltaTime = 1;
+float deltaTime = 20;
 mat4 projectionMatrix;
 
 int time = 0;
 vec3 spherePos;
-Model *m, *m2, *tm, *groundSphere;
+Model *m, *m2, *terrain, *groundSphere;
 GLuint program;
 GLuint tex1, tex2;
 vec3 cam = {0, 5, 0};
@@ -85,6 +85,7 @@ void init(void)
 	glUniformMatrix4fv(glGetUniformLocation(program, "projMatrix"), 1, GL_TRUE, projectionMatrix.m);
 	glUniform1i(glGetUniformLocation(program, "tex"), 0); // Texture unit 0
 	LoadTGATextureSimple("maskros512.tga", &tex1);
+	LoadTGATextureSimple("SkyBox512.tga", &tex2);
 
 	// Upload light sources to shader
 	glUniform3fv(glGetUniformLocation(program, "lightSourcesDirPosArr"), 4, &lightSourcesDirectionsPositions[0].x);
@@ -94,32 +95,18 @@ void init(void)
 
 	// Load terrain data
 	LoadTGATextureData("fft-terrain.tga", &ttex);
-	tm = GenerateTerrain(&ttex);
+	terrain = GenerateTerrain(&ttex);
 	printError("init terrain");
 
 	groundSphere = LoadModelPlus("groundsphere.obj");
 }
 
 float oldTimeSinceStart = 0;
+float groundSphereHeight = 0.8;
 
-void display(void) {
-	glutWarpPointer(300, 300);
+mat4 total, modelView, camMatrix;
 
-	printf("time : %i\n", time);
-
-
-	// clear the screen
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	mat4 total, modelView, camMatrix;
-
-	printError("pre display");
-
-	glUseProgram(program);
-
-	handleKeyPress();
-
-	deltaTime = 20;
+void updateCameraPos(){
 	horizontalAngle -= mouseSpeed * deltaTime * (300 - xpos) ;
 	verticalAngle   -= mouseSpeed * deltaTime * (300 - ypos) ;
 
@@ -138,7 +125,6 @@ void display(void) {
 	right = newRight;
 
 	vec3 up = {0,-1,0};
-
 	position.y = getGroundY(position.x, position.z, &ttex) - 1;
 
 	vec3 lookAtPos = {
@@ -146,48 +132,45 @@ void display(void) {
 		position.y + direction.y,
 		position.z + direction.z
 	};
-
 	camMatrix = lookAt(
 		position.x, position.y, position.z,
 		lookAtPos.x, lookAtPos.y, lookAtPos.z,
 		up.x, up.y, up.z
 	);
-
 	glUniform3f(glGetUniformLocation(program, "cameraPos"), lookAtPos.x, lookAtPos.y, lookAtPos.z);
+}
 
-
-	modelView = IdentityMatrix();
-
+void draw(mat4 modelView, Model *m, GLuint texture){
 	total = Mult(camMatrix, modelView);
 	glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
 	glUniformMatrix4fv(glGetUniformLocation(program, "modelView"), 1, GL_TRUE, modelView.m);
+	glBindTexture(GL_TEXTURE_2D, texture);		// Bind Our Texture tex1
+	DrawModel(m, program, "inPosition", "inNormal", "inTexCoord");
+}
 
-	glBindTexture(GL_TEXTURE_2D, tex1);		// Bind Our Texture tex1
-	DrawModel(tm, program, "inPosition", "inNormal", "inTexCoord");
+void display(void) {
+	glutWarpPointer(300, 300);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	handleKeyPress();
+	updateCameraPos();
+	glUseProgram(program);
 
+	// Draw terrain
+	modelView = IdentityMatrix();
+	draw(modelView, terrain, tex1);
 
-	// Calculate sphere position
+	// Draw sphere
 	spherePos.x = 30 + 3* sin(time*0.05);
 	spherePos.z = 30 + 3* cos (time*0.05);
 	spherePos.y = getGroundY(spherePos.x,	spherePos.z, &ttex);
-
-
-	float groundSphereHeight = 0.8;
 	mat4 t = T(spherePos.x,spherePos.y - groundSphereHeight, spherePos.z);
 	mat4 s = S(0.4,0.4,0.4);
 	modelView = Mult(t, s);
-
-
-
-	total = Mult(camMatrix, modelView);
-	glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
-	glUniformMatrix4fv(glGetUniformLocation(program, "modelView"), 1, GL_TRUE, modelView.m);
-	DrawModel(groundSphere, program, "inPosition", "inNormal", "inTexCoord");
-
-	printError("display 2");
+	draw(modelView, groundSphere, tex2);
 
 	glutSwapBuffers();
 }
+
 
 void timer(int i)
 {
@@ -209,13 +192,11 @@ int main(int argc, char **argv)
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH);
 	glutInitContextVersion(3, 2);
 	glutInitWindowSize (600, 600);
-	glutCreateWindow ("TSBK07 Lab 4");
+	glutCreateWindow ("E-ol");
 	glutDisplayFunc(display);
 	init ();
 	glutTimerFunc(20, &timer, 0);
-
 	glutPassiveMotionFunc(mouse);
-
 	glutMainLoop();
 	exit(0);
 }
