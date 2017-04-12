@@ -26,7 +26,7 @@ mat4 total, camMatrix,projectionMatrix;
 int time = 0;
 Model *m, *m2, *terrain, *groundSphere, *tree;
 GLuint program;
-GLuint tex1, tex2, texBranch;
+GLuint tex1, tex2, texBranch, coconut;
 vec3 cam = {0, 5, 0};
 vec3 position = { 0, 0, 5 };
 GLfloat speed = 0.01f; // 3 units / second
@@ -97,6 +97,8 @@ void init(void)
 	LoadTGATextureSimple("maskros512.tga", &tex1);
 	LoadTGATextureSimple("SkyBox512.tga", &tex2);
 	LoadTGATextureSimple("grass.tga", &texBranch);
+	LoadTGATextureSimple("maskros512.tga", &coconut);
+
 
 	// Upload light sources to shader
 	glUniform3fv(glGetUniformLocation(program, "lightSourcesDirPosArr"), 4, &lightSourcesDirectionsPositions[0].x);
@@ -123,13 +125,9 @@ void init(void)
 	for(i = 0; i < numberOfTrees; i++){
 		xRandom = random() % 40 + 1;
 		yRandom = random() % 40 + 1;
-
 		Tree t = {xRandom, yRandom};
 		trees[i] = t;
 	}
-	//a = (rand() % 2);
-
-
 }
 
 
@@ -164,7 +162,7 @@ void drawTree1(float x, float y){
 	mat4 r = Rx(3.14);
 	mat4 s = S(0.4,0.4,0.4);
 	mat4 modelView = Mult(Mult(t, s),r);
-	draw(modelView, tree, texBranch);
+	draw(modelView, tree, coconut);
 }
 
 void drawTrees(){
