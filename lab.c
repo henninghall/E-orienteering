@@ -40,41 +40,83 @@ vec3 right;
 vec3 direction;
 
 typedef struct Tree {
-	float    x;
-	float    y;
+	float x;
+	float z;
+	float r;
 } Tree;
 
-
-
+int numberOfTrees = 100;
+//Tree trees[100] = 100;
+Tree *trees;
 
 void handleKeyPress(){
 	//	printf("%f %f\n", distance, direction.x);
 
 	if (glutKeyIsDown('w')) {
 		position.x += distance * direction.x;
-		position.y += distance * direction.y;
 		position.z += distance * direction.z;
 	}
 	if (glutKeyIsDown('s')) {
 		position.x -= distance * direction.x;
-		position.y -= distance * direction.y;
 		position.z -= distance * direction.z;
 	}
 	if (glutKeyIsDown('a')) {
 		position.x += distance * right.x;
-		position.y += distance * right.y;
 		position.z += distance * right.z;
 	}
 	if (glutKeyIsDown('d')) {
 		position.x -= distance * right.x;
-		position.y -= distance * right.y;
 		position.z -= distance * right.z;
 	}
 }
 
-int numberOfTrees = 100;
-//Tree trees[100] = 100;
-Tree *trees;
+void handleCollision() {
+	int i;
+	double xDiff, zDiff;
+	//printf("camera pos: %f %f\n", position.x, position.z);
+
+	for(i = 0; i < numberOfTrees; i++){
+		xDiff = abs(trees[i].x - position.x);
+		zDiff = abs(trees[i].z - position.z);
+		if(xDiff < trees[i].r && zDiff < trees[i].r){
+			// Hanle collision by moving camera to closest border of collision radie.
+			// Closes middle of object on x axis : keep x position and move camera to outer boarder on z axis
+			if(xDiff < zDiff){
+				if(	position.z > trees[i].z) position.z = trees[i].z + trees[i].r;
+				else position.z = trees[i].z - trees[i].r;
+			}
+			else {
+				if(	position.x > trees[i].x) position.x = trees[i].x + trees[i].r;
+				else position.x = trees[i].x - trees[i].r;
+			}
+		}
+	}
+}
+
+void updateCameraPos(){
+	handleKeyPress();
+	position.y = getGroundY(position.x, position.z, &ttex) - 1;
+	handleCollision();
+}
+
+
+
+void generateTrees(){
+	int i;
+	double xRandom;
+	double zRandom;
+	double rRandom;
+	trees = malloc(numberOfTrees*20);
+
+	for(i = 0; i < numberOfTrees; i++){
+		xRandom = random() % 40 + 1 + 0.01; // +0.01 to avoid borders
+		zRandom = random() % 40 + 1 + 0.01;
+		rRandom = 0.6 + (random() % 3) * 0.1;
+		Tree t = {xRandom, zRandom, rRandom};
+		trees[i] = t;
+	}
+}
+
 
 void init(void)
 {
@@ -100,9 +142,6 @@ void init(void)
 	LoadTGATextureSimple("grass.tga", &texBranch);
 	LoadTGATextureSimple("maskros512.tga", &coconut);
 
-
-
-	// Upload light sources to shader
 	glUniform3fv(glGetUniformLocation(program, "lightSourcesDirPosArr"), 4, &lightSourcesDirectionsPositions[0].x);
 	glUniform3fv(glGetUniformLocation(program, "lightSourcesColorArr"), 4, &lightSourcesColorsArr[0].x);
 	glUniform1fv(glGetUniformLocation(program, "specularExponent"), 4, specularExponent);
@@ -125,22 +164,9 @@ void init(void)
 
 	glUseProgram(program);
 
-
-	// Generate random trees
-	int i;
-	int xRandom;
-
-	int yRandom;
-	int max = 10;
-	trees = malloc(numberOfTrees*10);
-
-	for(i = 0; i < numberOfTrees; i++){
-		xRandom = random() % 40 + 1;
-		yRandom = random() % 40 + 1;
-		Tree t = {xRandom, yRandom};
-		trees[i] = t;
-	}
+	generateTrees();
 }
+
 
 
 void draw(mat4 modelView, Model *m, GLuint texture){
@@ -164,27 +190,20 @@ void drawSphere(){
 }
 
 
-
-void drawTree1(float x, float y){
-	vec3 pos;
-	pos.x = x;
-	pos.z = y;
-	pos.y = getGroundY(pos.x,	pos.z , &ttex);
-	mat4 t = T(pos.x,pos.y, pos.z);
+void drawTree1(Tree curTree){
+	double sizeConstant = 0.7;
+	double y = getGroundY(curTree.x,	curTree.z, &ttex);
+	mat4 t = T(curTree.x, y,curTree.z);
 	mat4 r = Rx(3.14);
-	mat4 s = S(0.4,0.4,0.4);
+	mat4 s = S(curTree.r * sizeConstant, curTree.r * sizeConstant, curTree.r * sizeConstant);
 	mat4 modelView = Mult(Mult(t, s),r);
 	draw(modelView, tree, coconut);
 }
 
 void drawTrees(){
-	int a;
-
-
 	int i;
 	for(i = 0; i < numberOfTrees; i++){
-
-		drawTree1(trees[i].x+0.01,trees[i].y+0.01);
+		drawTree1(trees[i]);
 	}
 }
 
@@ -193,11 +212,33 @@ void drawTerrain(){
 	draw(modelView, terrain, texBranch);
 }
 
+void drawSkyBox(){
+	mat4 skyBoxLookAt = camMatrix;
+	skyBoxLookAt.m[3] = 0;
+	skyBoxLookAt.m[7] = 0;
+	skyBoxLookAt.m[11] = 0;
+	float s = 1;
+	float t = 0.2;
+	mat4 trans = T(t, t, t);
+	mat4 scale = S(s, s, s);
+	mat4 rot = Rx(3.14);
+	mat4 total = Mult(Mult(trans, scale),rot);
+	glUseProgram(skyBoxProgram);
+	glUniformMatrix4fv(glGetUniformLocation(skyBoxProgram, "lookAtMatrix"), 1, GL_TRUE, skyBoxLookAt.m);
+	glUniformMatrix4fv(glGetUniformLocation(skyBoxProgram, "mdlMatrix"), 1, GL_TRUE, total.m);
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_DEPTH_TEST);
+	glBindTexture(GL_TEXTURE_2D, skyBoxTex);
+	DrawModel(skyBox, skyBoxProgram, "in_Position", "in_Normal", "inTexCoord");
+	glEnable(GL_DEPTH_TEST);
+	//	glEnable(GL_CULL_FACE);
+	glUseProgram(program);
+}
 
 
 GLfloat horizontalAngle = 1.2f;
 GLfloat verticalAngle = 0.5f;
-void updateCameraPos(){
+void updateLookAt(){
 
 	horizontalAngle -= mouseSpeed * deltaTime * (300 - xpos) ;
 	verticalAngle   -= mouseSpeed * deltaTime * (300 - ypos) ;
@@ -217,7 +258,6 @@ void updateCameraPos(){
 	right = newRight;
 
 	vec3 up = {0,-1,0};
-	position.y = getGroundY(position.x, position.z, &ttex) - 1;
 
 	vec3 lookAtPos = {
 		position.x + direction.x,
@@ -235,42 +275,14 @@ void updateCameraPos(){
 void display(void) {
 	glutWarpPointer(300, 300);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	handleKeyPress();
-
-
-
-	mat4 skyBoxLookAt = camMatrix;
-	skyBoxLookAt.m[3] = 0;
-	skyBoxLookAt.m[7] = 0;
-	skyBoxLookAt.m[11] = 0;
-	float s = 1;
-	float t = 0.2;
-	mat4 trans = T(t, t, t);
-  mat4 scale = S(s, s, s);
-	mat4 rot = Rx(3.14);
-  mat4 total = Mult(Mult(trans, scale),rot);
-
-
-	glUseProgram(skyBoxProgram);
-	glUniformMatrix4fv(glGetUniformLocation(skyBoxProgram, "lookAtMatrix"), 1, GL_TRUE, skyBoxLookAt.m);
-	glUniformMatrix4fv(glGetUniformLocation(skyBoxProgram, "mdlMatrix"), 1, GL_TRUE, total.m);
-	//glDisable(GL_CULL_FACE);
-	glDisable(GL_DEPTH_TEST);
-	glBindTexture(GL_TEXTURE_2D, skyBoxTex);
-	DrawModel(skyBox, skyBoxProgram, "in_Position", "in_Normal", "inTexCoord");
-	glEnable(GL_DEPTH_TEST);
-//	glEnable(GL_CULL_FACE);
-
-
-	glUseProgram(program);
-
 
 	updateCameraPos();
+	updateLookAt();
 
+	drawSkyBox();
 	drawSphere();
 	drawTerrain();
 	drawTrees();
-
 
 	glutSwapBuffers();
 }

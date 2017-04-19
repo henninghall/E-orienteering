@@ -64,12 +64,10 @@ Model* GenerateTerrain(TextureData *tex)
     indexArray[(x + z * (tex->width-1))*6 + 1] = x + (z+1) * tex->width;
     indexArray[(x + z * (tex->width-1))*6 + 2] = x+1 + z * tex->width;
 
-
     // Triangle 2
     indexArray[(x + z * (tex->width-1))*6 + 3] = x+1 + z * tex->width;
     indexArray[(x + z * (tex->width-1))*6 + 4] = x + (z+1) * tex->width;
     indexArray[(x + z * (tex->width-1))*6 + 5] = x+1 + (z+1) * tex->width;
-
   }
 
   for (x = 0; x < tex->width-1; x++)
@@ -115,7 +113,6 @@ Model* GenerateTerrain(TextureData *tex)
     normalArray[(x + z * tex->width)*3 + 2] = normalVec.z;
   }
   // End of terrain generation
-
 
   // Create Model and upload to GPU:
   Model* model = LoadDataToModel(
@@ -194,7 +191,6 @@ Model* GenerateTerrain(TextureData *tex)
             //printf("dist2 : %f\n", dist2);
             //printf("dist3 : %f\n", dist3);
 
-
             float totalDist = dist1 + dist2 + dist3;
 
             float weight1 = (totalDist-dist1)*(totalDist-dist1);
@@ -204,7 +200,6 @@ Model* GenerateTerrain(TextureData *tex)
           //  printf("weight1 : %f\n", weight1);
           //  printf("weight2 : %f\n", weight2);
           //  printf("weight3 : %f\n", weight3);
-
 
             float totalWeight = weight1 + weight2 + weight3;
 
