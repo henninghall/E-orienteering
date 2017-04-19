@@ -234,7 +234,8 @@ void drawMap(){
 	printf("%f %f\n", direction.z, direction.x);
 
 	double a = atan(direction.z/direction.x);
-	printf("%f\n", a);
+	printf("a: %f\n", a);
+
 
 
 
@@ -243,7 +244,9 @@ void drawMap(){
 
 	m = Mult(m, Rz(3.14/2));
 	m = Mult(m, Rx(-a ));
-	m = Mult(m, Rz(1 ));
+
+	if(direction.x > 0) m = Mult(m, Rz(1));
+	else m = Mult(m, Rz(-1));
 
 	//m = Mult(m, T( lookAtPos.x, lookAtPos.y + 0.3, lookAtPos.z ));
 
