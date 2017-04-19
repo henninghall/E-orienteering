@@ -28,11 +28,13 @@ int windowSize = 800;
 mat4 camMatrix,projectionMatrix;
 
 int time = 0;
-Model *m, *m2, *terrain, *groundSphere, *tree, *skyBox, *rock;
+Model *m, *m2, *terrain, *groundSphere, *tree, *skyBox, *rock, *map;
 GLuint program, skyBoxProgram;
 GLuint tex1, tex2, texBranch, coconut, skyBoxTex, stone;
 vec3 cam = {0, 5, 0};
 vec3 position = { 0, 0, 5 };
+vec3 lookAtPos = { 0, 0, 5 };
+
 GLfloat speed = 0.01f; // 3 units / second
 GLfloat mouseSpeed = 0.00005f;
 float distance = 20 * 0.01f;
@@ -148,6 +150,7 @@ void init(void)
 	tree = LoadModelPlus("fir.obj");
 	rock = LoadModelPlus("stone.obj");
 	skyBox = LoadModelPlus("skybox.obj");
+	map = LoadModelPlus("cubeplus.obj");
 
 	glUseProgram(skyBoxProgram);
 	LoadTGATextureSimple("SkyBox512.tga", &skyBoxTex);
@@ -180,7 +183,6 @@ void drawSphere(){
 	mat4 modelView = Mult(t, s);
 	draw(modelView, groundSphere, tex2);
 }
-
 
 void drawTree1(WorldObject curTree){
 	double sizeConstant = 0.7;
@@ -222,6 +224,47 @@ void drawRocks(){
 void drawTerrain(){
 	mat4 modelView = IdentityMatrix();
 	draw(modelView, terrain, texBranch);
+}
+
+void drawMap(){
+
+
+  mat4 m = IdentityMatrix();
+
+	printf("%f %f\n", direction.z, direction.x);
+
+	double a = atan(direction.z/direction.x);
+	printf("%f\n", a);
+
+
+
+
+	m = Mult(m, T( position.x + direction.x *0.7, position.y+0.5, position.z + direction.z * 0.7));
+
+	m = Mult(m, Rz(3.14/2));
+	m = Mult(m, Rx(-a ));
+	m = Mult(m, Rz(1 ));
+
+	//m = Mult(m, T( lookAtPos.x, lookAtPos.y + 0.3, lookAtPos.z ));
+
+
+
+
+
+//m = Mult(m, Rx(tan(direction.z)/tan(lookAtPos.x)));
+
+//	m = Mult(m, T( 2 , position.y, 1));
+
+	m = Mult(m, S(0.5 ,0.01, 0.5));
+//	m = Mult(m, T( lookAtPos.x, 1, lookAtPos.z));
+
+
+	//mat4 r = Mult(Rz(lookAtPos.z),Rx(lookAtPos.x));
+
+	//mat4 s = S(0.5 ,0.01, 0.5);
+	//mat4 modelView = Mult(Mult(t, s),r);
+
+  draw(m, map, stone);
 }
 
 void drawSkyBox(){
@@ -271,11 +314,10 @@ void updateLookAt(){
 
 	vec3 up = {0,-1,0};
 
-	vec3 lookAtPos = {
-		position.x + direction.x,
-		position.y + direction.y,
-		position.z + direction.z
-	};
+	lookAtPos.x = position.x + direction.x;
+	lookAtPos.y = position.y + direction.y;
+	lookAtPos.z = position.z + direction.z;
+
 	camMatrix = lookAt(
 		position.x, position.y, position.z,
 		lookAtPos.x, lookAtPos.y, lookAtPos.z,
@@ -296,6 +338,8 @@ void display(void) {
 	drawTerrain();
 	drawTrees();
 	drawRocks();
+	drawMap();
+
 
 	glutSwapBuffers();
 }
