@@ -12,6 +12,7 @@ GLfloat *texCoordArray;
 GLuint *indexArray;
 int triangleCount;
 
+
 // http://stackoverflow.com/questions/2049582/how-to-determine-if-a-point-is-in-a-2d-triangle
 float sign (vec3 p1, vec3 p2, vec3 p3)
 {
@@ -29,6 +30,35 @@ bool PointInTriangle (vec3 pt, vec3 v1, vec3 v2, vec3 v3)
   return ((b1 == b2) && (b2 == b3));
 }
 
+WorldObject* GenerateTrees(int numberOfTrees){
+  int i;
+  double xRandom, zRandom, rRandom;
+  WorldObject* trees = malloc(numberOfTrees*20);
+
+  for(i = 0; i < numberOfTrees; i++){
+    xRandom = random() % 40 + 1 + 0.01; // +0.01 to avoid borders
+    zRandom = random() % 40 + 1 + 0.01;
+    rRandom = 0.6 + (random() % 3) * 0.1;
+    WorldObject t = {xRandom, zRandom, rRandom};
+    trees[i] = t;
+  }
+  return trees;
+}
+
+WorldObject* GenerateRocks(int numberOfRocks){
+  int i;
+  double xRandom, zRandom, rRandom;
+  WorldObject* rocks = malloc(numberOfRocks*20);
+
+  for(i = 0; i < numberOfRocks; i++){
+    xRandom = random() % 40 + 1 + 0.01; // +0.01 to avoid borders
+    zRandom = random() % 40 + 1 + 0.01;
+    rRandom = 2.0 + (random() % 3) * 0.1;
+    WorldObject r = {xRandom, zRandom, rRandom};
+    rocks[i] = r;
+  }
+  return rocks;
+}
 
 Model* GenerateTerrain(TextureData *tex)
 {
@@ -197,9 +227,9 @@ Model* GenerateTerrain(TextureData *tex)
             float weight2 = (totalDist-dist2)*(totalDist-dist2);
             float weight3 = (totalDist-dist3)*(totalDist-dist3);
 
-          //  printf("weight1 : %f\n", weight1);
-          //  printf("weight2 : %f\n", weight2);
-          //  printf("weight3 : %f\n", weight3);
+            //  printf("weight1 : %f\n", weight1);
+            //  printf("weight2 : %f\n", weight2);
+            //  printf("weight3 : %f\n", weight3);
 
             float totalWeight = weight1 + weight2 + weight3;
 

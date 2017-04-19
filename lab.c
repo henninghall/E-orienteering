@@ -21,12 +21,16 @@ TextureData ttex; // terrain
 
 float deltaTime = 20;
 float oldTimeSinceStart = 0;
+int numberOfTrees = 100;
+int numberOfRocks = 10;
+int windowSize = 800;
+
 mat4 camMatrix,projectionMatrix;
 
 int time = 0;
-Model *m, *m2, *terrain, *groundSphere, *tree, *skyBox;
+Model *m, *m2, *terrain, *groundSphere, *tree, *skyBox, *rock;
 GLuint program, skyBoxProgram;
-GLuint tex1, tex2, texBranch, coconut, skyBoxTex;
+GLuint tex1, tex2, texBranch, coconut, skyBoxTex, stone;
 vec3 cam = {0, 5, 0};
 vec3 position = { 0, 0, 5 };
 GLfloat speed = 0.01f; // 3 units / second
@@ -39,15 +43,8 @@ GLfloat ypos;
 vec3 right;
 vec3 direction;
 
-typedef struct Tree {
-	float x;
-	float z;
-	float r;
-} Tree;
-
-int numberOfTrees = 100;
-//Tree trees[100] = 100;
-Tree *trees;
+WorldObject *trees;
+WorldObject *rocks;
 
 void handleKeyPress(){
 	//	printf("%f %f\n", distance, direction.x);
@@ -70,51 +67,45 @@ void handleKeyPress(){
 	}
 }
 
-void handleCollision() {
-	int i;
+void handleCollision(WorldObject obj) {
 	double xDiff, zDiff;
-	//printf("camera pos: %f %f\n", position.x, position.z);
 
-	for(i = 0; i < numberOfTrees; i++){
-		xDiff = abs(trees[i].x - position.x);
-		zDiff = abs(trees[i].z - position.z);
-		if(xDiff < trees[i].r && zDiff < trees[i].r){
-			// Hanle collision by moving camera to closest border of collision radie.
-			// Closes middle of object on x axis : keep x position and move camera to outer boarder on z axis
-			if(xDiff < zDiff){
-				if(	position.z > trees[i].z) position.z = trees[i].z + trees[i].r;
-				else position.z = trees[i].z - trees[i].r;
-			}
-			else {
-				if(	position.x > trees[i].x) position.x = trees[i].x + trees[i].r;
-				else position.x = trees[i].x - trees[i].r;
-			}
+	xDiff = abs(obj.x - position.x);
+	zDiff = abs(obj.z - position.z);
+	if(xDiff < obj.r && zDiff < obj.r){
+		// Hanle collision by moving camera to closest border of collision radie.
+		// Closes middle of object on x axis : keep x position and move camera to outer boarder on z axis
+		if(xDiff < zDiff){
+			if(	position.z > obj.z) position.z = obj.z + obj.r;
+			else position.z = obj.z - obj.r;
 		}
+		else {
+			if(	position.x > obj.x) position.x = obj.x + obj.r;
+			else position.x = obj.x - obj.r;
+		}
+	}
+}
+
+void handleCollisions() {
+	int i;
+
+	// trees
+	for(i = 0; i < numberOfTrees; i++){
+		WorldObject obj = trees[i];
+		handleCollision(obj);
+	}
+
+	// rocks
+	for(i = 0; i < numberOfRocks; i++){
+		WorldObject obj = rocks[i];
+		handleCollision(obj);
 	}
 }
 
 void updateCameraPos(){
 	handleKeyPress();
 	position.y = getGroundY(position.x, position.z, &ttex) - 1;
-	handleCollision();
-}
-
-
-
-void generateTrees(){
-	int i;
-	double xRandom;
-	double zRandom;
-	double rRandom;
-	trees = malloc(numberOfTrees*20);
-
-	for(i = 0; i < numberOfTrees; i++){
-		xRandom = random() % 40 + 1 + 0.01; // +0.01 to avoid borders
-		zRandom = random() % 40 + 1 + 0.01;
-		rRandom = 0.6 + (random() % 3) * 0.1;
-		Tree t = {xRandom, zRandom, rRandom};
-		trees[i] = t;
-	}
+	handleCollisions();
 }
 
 
@@ -141,6 +132,7 @@ void init(void)
 	LoadTGATextureSimple("SkyBox512.tga", &tex2);
 	LoadTGATextureSimple("grass.tga", &texBranch);
 	LoadTGATextureSimple("maskros512.tga", &coconut);
+	LoadTGATextureSimple("conc.tga", &stone);
 
 	glUniform3fv(glGetUniformLocation(program, "lightSourcesDirPosArr"), 4, &lightSourcesDirectionsPositions[0].x);
 	glUniform3fv(glGetUniformLocation(program, "lightSourcesColorArr"), 4, &lightSourcesColorsArr[0].x);
@@ -154,19 +146,19 @@ void init(void)
 
 	groundSphere = LoadModelPlus("groundsphere.obj");
 	tree = LoadModelPlus("fir.obj");
+	rock = LoadModelPlus("stone.obj");
 	skyBox = LoadModelPlus("skybox.obj");
 
 	glUseProgram(skyBoxProgram);
-	// Skybox texturea
 	LoadTGATextureSimple("SkyBox512.tga", &skyBoxTex);
 	glUniformMatrix4fv(glGetUniformLocation(skyBoxProgram, "projection"), 1, GL_TRUE, projectionMatrix.m);
 	glUniform1i(glGetUniformLocation(skyBoxProgram, "skyBoxTex"), 0);
 
 	glUseProgram(program);
 
-	generateTrees();
+	trees = GenerateTrees(numberOfTrees);
+	rocks = GenerateRocks(numberOfRocks);
 }
-
 
 
 void draw(mat4 modelView, Model *m, GLuint texture){
@@ -190,7 +182,7 @@ void drawSphere(){
 }
 
 
-void drawTree1(Tree curTree){
+void drawTree1(WorldObject curTree){
 	double sizeConstant = 0.7;
 	double y = getGroundY(curTree.x,	curTree.z, &ttex);
 	mat4 t = T(curTree.x, y,curTree.z);
@@ -200,12 +192,32 @@ void drawTree1(Tree curTree){
 	draw(modelView, tree, coconut);
 }
 
+void drawRock(WorldObject obj){
+	double sizeConstant = 0.7;
+	double height = 0.8;
+	double y = getGroundY(obj.x,obj.z, &ttex);
+	mat4 t = T(obj.x, y - height,obj.z);
+	mat4 r = Rx(3.14);
+	mat4 s = S(obj.r * sizeConstant, obj.r * sizeConstant, obj.r * sizeConstant);
+	mat4 modelView = Mult(Mult(t, s),r);
+	draw(modelView, rock, stone);
+}
+
+
 void drawTrees(){
 	int i;
 	for(i = 0; i < numberOfTrees; i++){
 		drawTree1(trees[i]);
 	}
 }
+
+void drawRocks(){
+	int i;
+	for(i = 0; i < numberOfRocks; i++){
+		drawRock(rocks[i]);
+	}
+}
+
 
 void drawTerrain(){
 	mat4 modelView = IdentityMatrix();
@@ -240,8 +252,8 @@ GLfloat horizontalAngle = 1.2f;
 GLfloat verticalAngle = 0.5f;
 void updateLookAt(){
 
-	horizontalAngle -= mouseSpeed * deltaTime * (300 - xpos) ;
-	verticalAngle   -= mouseSpeed * deltaTime * (300 - ypos) ;
+	horizontalAngle -= mouseSpeed * deltaTime * (windowSize / 2 - xpos) ;
+	verticalAngle   -= mouseSpeed * deltaTime * (windowSize / 2 - ypos) ;
 
 	vec3 newDirection = {
 		cos(verticalAngle) * sin(horizontalAngle),
@@ -273,7 +285,7 @@ void updateLookAt(){
 }
 
 void display(void) {
-	glutWarpPointer(300, 300);
+	glutWarpPointer( windowSize / 2, windowSize / 2);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	updateCameraPos();
@@ -283,6 +295,7 @@ void display(void) {
 	drawSphere();
 	drawTerrain();
 	drawTrees();
+	drawRocks();
 
 	glutSwapBuffers();
 }
@@ -307,7 +320,7 @@ int main(int argc, char **argv)
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH);
 	glutInitContextVersion(3, 2);
-	glutInitWindowSize (600, 600);
+	glutInitWindowSize (windowSize, windowSize);
 	glutCreateWindow ("E-ol");
 	glutDisplayFunc(display);
 	//glutSetCursor(0);
