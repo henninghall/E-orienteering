@@ -227,47 +227,15 @@ void drawTerrain(){
 }
 
 void drawMap(){
-
-
-  mat4 m = IdentityMatrix();
-
-	printf("%f %f\n", direction.z, direction.x);
-
+	mat4 m = IdentityMatrix();
 	double a = atan(direction.z/direction.x);
-	printf("a: %f\n", a);
-
-
-
-
-
 	m = Mult(m, T( position.x + direction.x *0.7, position.y+0.5, position.z + direction.z * 0.7));
-
 	m = Mult(m, Rz(3.14/2));
 	m = Mult(m, Rx(-a ));
-
 	if(direction.x > 0) m = Mult(m, Rz(1));
 	else m = Mult(m, Rz(-1));
-
-	//m = Mult(m, T( lookAtPos.x, lookAtPos.y + 0.3, lookAtPos.z ));
-
-
-
-
-
-//m = Mult(m, Rx(tan(direction.z)/tan(lookAtPos.x)));
-
-//	m = Mult(m, T( 2 , position.y, 1));
-
 	m = Mult(m, S(0.5 ,0.01, 0.5));
-//	m = Mult(m, T( lookAtPos.x, 1, lookAtPos.z));
-
-
-	//mat4 r = Mult(Rz(lookAtPos.z),Rx(lookAtPos.x));
-
-	//mat4 s = S(0.5 ,0.01, 0.5);
-	//mat4 modelView = Mult(Mult(t, s),r);
-
-  draw(m, map, stone);
+	draw(m, map, stone);
 }
 
 void drawSkyBox(){
