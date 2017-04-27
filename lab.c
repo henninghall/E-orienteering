@@ -32,7 +32,7 @@ Model *m, *m2, *terrain, *groundSphere, *tree, *skyBox, *rock, *map;
 GLuint program, skyBoxProgram;
 GLuint tex1, tex2, texBranch, coconut, skyBoxTex, stone;
 vec3 cam = {0, 5, 0};
-vec3 position = { 0, 0, 5 };
+vec3 position = { 22, 0, 22 };
 vec3 lookAtPos = { 0, 0, 5 };
 
 GLfloat speed = 0.01f; // 3 units / second
@@ -226,6 +226,13 @@ void drawTerrain(){
 	draw(modelView, terrain, texBranch);
 }
 
+void drawMapRock(mat4 m, WorldObject rockObject){
+
+	mat4 stonePos = Mult(m, T(-rockObject.x * 0.01 + 0.5, 1, rockObject.z * 0.01 - 0.5));
+	stonePos = Mult(stonePos, S(0.01 ,0.001,0.01));
+	draw(stonePos, rock, stone);
+}
+
 void drawMap(){
 	mat4 m = IdentityMatrix();
 	double a = atan(direction.z/direction.x);
@@ -235,8 +242,18 @@ void drawMap(){
 	if(direction.x > 0) m = Mult(m, Rz(1));
 	else m = Mult(m, Rz(-1));
 	m = Mult(m, S(0.5 ,0.01, 0.5));
+
 	draw(m, map, stone);
+
+int i;
+	for(i = 0; i < numberOfRocks; i++){
+		drawMapRock(m, rocks[i]);
+	}
+
 }
+
+
+
 
 void drawSkyBox(){
 	mat4 skyBoxLookAt = camMatrix;

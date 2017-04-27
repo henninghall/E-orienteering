@@ -51,8 +51,8 @@ WorldObject* GenerateRocks(int numberOfRocks){
   WorldObject* rocks = malloc(numberOfRocks*20);
 
   for(i = 0; i < numberOfRocks; i++){
-    xRandom = random() % 40 + 1 + 0.01; // +0.01 to avoid borders
-    zRandom = random() % 40 + 1 + 0.01;
+    xRandom = random() % 60 + 1 + 0.01; // +0.01 to avoid borders
+    zRandom = random() % 60 + 1 + 0.01;
     rRandom = 2.0 + (random() % 3) * 0.1;
     WorldObject r = {xRandom, zRandom, rRandom};
     rocks[i] = r;
