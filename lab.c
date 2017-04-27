@@ -29,7 +29,7 @@ mat4 camMatrix,projectionMatrix;
 
 int time = 0;
 Model *m, *m2, *terrain, *groundSphere, *tree, *skyBox, *rock, *map;
-GLuint program, skyBoxProgram;
+GLuint program, skyBoxProgram, mapProgram;
 GLuint tex1, tex2, texBranch, coconut, skyBoxTex, stone;
 vec3 cam = {0, 5, 0};
 vec3 position = { 0, 0, 5 };
@@ -47,6 +47,26 @@ vec3 direction;
 
 WorldObject *trees;
 WorldObject *rocks;
+
+
+
+
+// vertex buffer object, used for uploading the geometry
+unsigned int vertexBufferMap;
+unsigned int vertexArrayMap;
+
+// Globals
+// Data would normally be read from files
+
+GLfloat vertices[] =
+{
+	-1.0f,-1.0f,0.0f,
+	-1.0f,0.0f,0.0f,
+	0.0f,-1.0f,0.0f,
+	0.0f,-1.0f,0.0f,
+	-1.0f,0.0f,0.0f,
+	0.0f, 0.0f,0.0f,
+};
 
 void handleKeyPress(){
 	//	printf("%f %f\n", distance, direction.x);
@@ -124,6 +144,7 @@ void init(void)
 	// Load and compile shader
 	program = loadShaders("terrain-new.vert", "terrain-new.frag");
 	skyBoxProgram = loadShaders("skybox.vert", "skybox.frag");
+	mapProgram = loadShaders("simple.vert", "simple.frag");
 
 	glUseProgram(program);
 	printError("init shader");
@@ -161,15 +182,26 @@ void init(void)
 
 	trees = GenerateTrees(numberOfTrees);
 	rocks = GenerateRocks(numberOfRocks);
+
+
+
+
+
+		// vertex array object
+
+		// Reference to shader program
+
+
 }
 
 
-void draw(mat4 modelView, Model *m, GLuint texture){
+void draw(mat4 modelView, Model *m, GLuint texture, GLuint curProgram){
+	glUseProgram(curProgram);
 	mat4 total = Mult(camMatrix, modelView);
-	glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
-	glUniformMatrix4fv(glGetUniformLocation(program, "modelView"), 1, GL_TRUE, modelView.m);
+	glUniformMatrix4fv(glGetUniformLocation(curProgram, "mdlMatrix"), 1, GL_TRUE, total.m);
+	glUniformMatrix4fv(glGetUniformLocation(curProgram, "modelView"), 1, GL_TRUE, modelView.m);
 	glBindTexture(GL_TEXTURE_2D, texture);		// Bind Our Texture tex1
-	DrawModel(m, program, "inPosition", "inNormal", "inTexCoord");
+	DrawModel(m, curProgram, "inPosition", "inNormal", "inTexCoord");
 }
 
 void drawSphere(){
@@ -181,7 +213,7 @@ void drawSphere(){
 	mat4 t = T(pos.x, pos.y - groundSphereHeight, pos.z);
 	mat4 s = S(0.4,0.4,0.4);
 	mat4 modelView = Mult(t, s);
-	draw(modelView, groundSphere, tex2);
+	draw(modelView, groundSphere, tex2, program);
 }
 
 void drawTree1(WorldObject curTree){
@@ -191,7 +223,7 @@ void drawTree1(WorldObject curTree){
 	mat4 r = Rx(3.14);
 	mat4 s = S(curTree.r * sizeConstant, curTree.r * sizeConstant, curTree.r * sizeConstant);
 	mat4 modelView = Mult(Mult(t, s),r);
-	draw(modelView, tree, coconut);
+	draw(modelView, tree, coconut, program);
 }
 
 void drawRock(WorldObject obj){
@@ -202,7 +234,7 @@ void drawRock(WorldObject obj){
 	mat4 r = Rx(3.14);
 	mat4 s = S(obj.r * sizeConstant, obj.r * sizeConstant, obj.r * sizeConstant);
 	mat4 modelView = Mult(Mult(t, s),r);
-	draw(modelView, rock, stone);
+	draw(modelView, rock, stone, program);
 }
 
 
@@ -223,51 +255,51 @@ void drawRocks(){
 
 void drawTerrain(){
 	mat4 modelView = IdentityMatrix();
-	draw(modelView, terrain, texBranch);
+	draw(modelView, terrain, texBranch, program);
 }
 
+
+
+
 void drawMap(){
-
-
   mat4 m = IdentityMatrix();
-
-	printf("%f %f\n", direction.z, direction.x);
-
 	double a = atan(direction.z/direction.x);
-	printf("a: %f\n", a);
-
-
-
-
-
 	m = Mult(m, T( position.x + direction.x *0.7, position.y+0.5, position.z + direction.z * 0.7));
-
 	m = Mult(m, Rz(3.14/2));
 	m = Mult(m, Rx(-a ));
-
 	if(direction.x > 0) m = Mult(m, Rz(1));
 	else m = Mult(m, Rz(-1));
-
-	//m = Mult(m, T( lookAtPos.x, lookAtPos.y + 0.3, lookAtPos.z ));
-
-
-
-
-
-//m = Mult(m, Rx(tan(direction.z)/tan(lookAtPos.x)));
-
-//	m = Mult(m, T( 2 , position.y, 1));
-
 	m = Mult(m, S(0.5 ,0.01, 0.5));
-//	m = Mult(m, T( lookAtPos.x, 1, lookAtPos.z));
 
 
-	//mat4 r = Mult(Rz(lookAtPos.z),Rx(lookAtPos.x));
+	glUseProgram(mapProgram);
 
-	//mat4 s = S(0.5 ,0.01, 0.5);
-	//mat4 modelView = Mult(Mult(t, s),r);
+	glDisable(GL_DEPTH_TEST);
+	glGenVertexArrays(1, &vertexArrayMap);
+	glBindVertexArray(vertexArrayMap);
+	glGenBuffers(1, &vertexBufferMap);
+	// VBO for vertex data
+	glBindBuffer(GL_ARRAY_BUFFER, vertexBufferMap);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glVertexAttribPointer(glGetAttribLocation(mapProgram, "in_Position"), 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(glGetAttribLocation(mapProgram, "in_Position"));
 
-  draw(m, map, stone);
+	glBindVertexArray(vertexArrayMap);	// Select VAO
+	glDrawArrays(GL_TRIANGLES, 0, sizeof(vertices));	// draw object
+	glEnable(GL_PROGRAM_POINT_SIZE);
+
+
+	glDrawArrays(GL_POINTS, 0, sizeof(vertices));
+
+	printError("display");
+
+	glEnable(GL_DEPTH_TEST);
+
+	glUseProgram(program);
+
+
+
+//  draw(m, map, stone, mapProgram);
 }
 
 void drawSkyBox(){
@@ -336,12 +368,15 @@ void display(void) {
 	updateCameraPos();
 	updateLookAt();
 
+
 	drawSkyBox();
+
 	drawSphere();
 	drawTerrain();
 	drawTrees();
 	drawRocks();
 	drawMap();
+
 
 
 	glutSwapBuffers();
