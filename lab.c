@@ -129,7 +129,7 @@ void init(void)
 	printError("init shader");
 
 	glUniformMatrix4fv(glGetUniformLocation(program, "projMatrix"), 1, GL_TRUE, projectionMatrix.m);
-//	glUniform1i(glGetUniformLocation(program, "texUnit"), 0); // Texture unit 0
+	//	glUniform1i(glGetUniformLocation(program, "texUnit"), 0); // Texture unit 0
 	LoadTGATextureSimple("maskros512.tga", &tex1);
 	LoadTGATextureSimple("SkyBox512.tga", &tex2);
 	LoadTGATextureSimple("grass.tga", &texBranch);
@@ -229,18 +229,30 @@ void drawTerrain(){
 
 void drawMapRock(mat4 m, WorldObject rockObject){
 	mat4 stonePos = Mult(m, T(-rockObject.x * 0.01 + 0.5, 1, rockObject.z * 0.01 - 0.5));
-	stonePos = Mult(stonePos, S(0.01 ,0.001,0.01));
+		stonePos = Mult(stonePos, S(0.01 ,0.001,0.01));
+	//stonePos = Mult(stonePos, S(0.1 ,0.01,0.1));
 	draw(stonePos, rock, coconut, 0);
 }
 
+
+double a = 0;
+double aPrev = 0;
+int spins = 0;
+
 void drawMap(){
 	mat4 m = IdentityMatrix();
-	double a = atan(direction.z/direction.x);
+	aPrev = a;
+	a = atan(direction.z/direction.x) - 3.14 * spins;
+
+	if(fabs(aPrev - a) > 1.0) {
+		spins++;
+		a-= 3.14;
+	}
+
 	m = Mult(m, T( position.x + direction.x *0.7, position.y+0.5, position.z + direction.z * 0.7));
 	m = Mult(m, Rz(3.14/2));
 	m = Mult(m, Rx(-a ));
-	if(direction.x > 0) m = Mult(m, Rz(1));
-	else m = Mult(m, Rz(-1));
+	m = Mult(m, Rz(1));
 	m = Mult(m, S(0.5 ,0.01, 0.5));
 
 	draw(m, map, stone, 0);
@@ -249,11 +261,7 @@ void drawMap(){
 	for(i = 0; i < numberOfRocks; i++){
 		drawMapRock(m, rocks[i]);
 	}
-
 }
-
-
-
 
 void drawSkyBox(){
 	mat4 skyBoxLookAt = camMatrix;
