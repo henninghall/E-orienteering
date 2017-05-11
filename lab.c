@@ -129,7 +129,7 @@ void init(void)
 	printError("init shader");
 
 	glUniformMatrix4fv(glGetUniformLocation(program, "projMatrix"), 1, GL_TRUE, projectionMatrix.m);
-	glUniform1i(glGetUniformLocation(program, "tex"), 0); // Texture unit 0
+//	glUniform1i(glGetUniformLocation(program, "texUnit"), 0); // Texture unit 0
 	LoadTGATextureSimple("maskros512.tga", &tex1);
 	LoadTGATextureSimple("SkyBox512.tga", &tex2);
 	LoadTGATextureSimple("grass.tga", &texBranch);
@@ -164,10 +164,11 @@ void init(void)
 }
 
 
-void draw(mat4 modelView, Model *m, GLuint texture){
+void draw(mat4 modelView, Model *m, GLuint texture, int showShadow){
 	mat4 total = Mult(camMatrix, modelView);
 	glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
 	glUniformMatrix4fv(glGetUniformLocation(program, "modelView"), 1, GL_TRUE, modelView.m);
+	glUniform1i(glGetUniformLocation(program, "showShadow"), showShadow);
 	glBindTexture(GL_TEXTURE_2D, texture);		// Bind Our Texture tex1
 	DrawModel(m, program, "inPosition", "inNormal", "inTexCoord");
 }
@@ -181,7 +182,7 @@ void drawSphere(){
 	mat4 t = T(pos.x, pos.y - groundSphereHeight, pos.z);
 	mat4 s = S(0.4,0.4,0.4);
 	mat4 modelView = Mult(t, s);
-	draw(modelView, groundSphere, tex2);
+	draw(modelView, groundSphere, tex2, 1);
 }
 
 void drawTree1(WorldObject curTree){
@@ -191,7 +192,7 @@ void drawTree1(WorldObject curTree){
 	mat4 r = Rx(3.14);
 	mat4 s = S(curTree.r * sizeConstant, curTree.r * sizeConstant, curTree.r * sizeConstant);
 	mat4 modelView = Mult(Mult(t, s),r);
-	draw(modelView, tree, coconut);
+	draw(modelView, tree, coconut, 1);
 }
 
 void drawRock(WorldObject obj){
@@ -202,7 +203,7 @@ void drawRock(WorldObject obj){
 	mat4 r = Rx(3.14);
 	mat4 s = S(obj.r * sizeConstant, obj.r * sizeConstant, obj.r * sizeConstant);
 	mat4 modelView = Mult(Mult(t, s),r);
-	draw(modelView, rock, stone);
+	draw(modelView, rock, stone, 1);
 }
 
 
@@ -223,14 +224,13 @@ void drawRocks(){
 
 void drawTerrain(){
 	mat4 modelView = IdentityMatrix();
-	draw(modelView, terrain, texBranch);
+	draw(modelView, terrain, texBranch, 1);
 }
 
 void drawMapRock(mat4 m, WorldObject rockObject){
-
 	mat4 stonePos = Mult(m, T(-rockObject.x * 0.01 + 0.5, 1, rockObject.z * 0.01 - 0.5));
 	stonePos = Mult(stonePos, S(0.01 ,0.001,0.01));
-	draw(stonePos, rock, stone);
+	draw(stonePos, rock, coconut, 0);
 }
 
 void drawMap(){
@@ -243,9 +243,9 @@ void drawMap(){
 	else m = Mult(m, Rz(-1));
 	m = Mult(m, S(0.5 ,0.01, 0.5));
 
-	draw(m, map, stone);
+	draw(m, map, stone, 0);
 
-int i;
+	int i;
 	for(i = 0; i < numberOfRocks; i++){
 		drawMapRock(m, rocks[i]);
 	}

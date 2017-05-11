@@ -33,6 +33,6 @@ void main(void)
 	//inPosition = vec3(200,200,0);
 
 
-	surfacePosition = (mdlMatrix * vec4(inPosition, 1.0)).xyz;
+	//surfacePosition = (mdlMatrix * vec4(inPosition, 1.0)).xyz;
 
 }

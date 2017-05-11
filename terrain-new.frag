@@ -14,6 +14,7 @@ uniform vec3 lightSourcesDirPosArr[4];
 uniform vec3 lightSourcesColorArr[4];
 uniform float specularExponent[4];
 uniform bool isDirectional[4];
+uniform bool showShadow;
 
 
 in vec3 fragVert;
@@ -32,7 +33,8 @@ shade = dot(normalize(normal), light);
 
 if(shade < 0.05) shade = 0.05;
 
+if(showShadow == false) shade = 1.0;
 
-out_Color = texture(texUnit, texCoord) *vec4(shade, shade, shade, 1.0);
+ out_Color = texture(texUnit, texCoord) * vec4(shade, shade, shade, 1.0);
 
 }
