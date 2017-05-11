@@ -30,7 +30,7 @@ mat4 camMatrix,projectionMatrix;
 int time = 0;
 Model *m, *m2, *terrain, *groundSphere, *tree, *skyBox, *rock, *map;
 GLuint program, skyBoxProgram;
-GLuint tex1, tex2, texBranch, coconut, skyBoxTex, stone;
+GLuint tex1, tex2, texBranch, coconut, skyBoxTex, stone, paper, black;
 vec3 cam = {0, 5, 0};
 vec3 position = { 22, 0, 22 };
 vec3 lookAtPos = { 0, 0, 5 };
@@ -135,6 +135,9 @@ void init(void)
 	LoadTGATextureSimple("grass.tga", &texBranch);
 	LoadTGATextureSimple("maskros512.tga", &coconut);
 	LoadTGATextureSimple("conc.tga", &stone);
+	LoadTGATextureSimple("paper.tga", &paper);
+	LoadTGATextureSimple("black.tga", &black);
+
 
 	glUniform3fv(glGetUniformLocation(program, "lightSourcesDirPosArr"), 4, &lightSourcesDirectionsPositions[0].x);
 	glUniform3fv(glGetUniformLocation(program, "lightSourcesColorArr"), 4, &lightSourcesColorsArr[0].x);
@@ -229,9 +232,8 @@ void drawTerrain(){
 
 void drawMapRock(mat4 m, WorldObject rockObject){
 	mat4 stonePos = Mult(m, T(-rockObject.x * 0.01 + 0.5, 1, rockObject.z * 0.01 - 0.5));
-		stonePos = Mult(stonePos, S(0.01 ,0.001,0.01));
-	//stonePos = Mult(stonePos, S(0.1 ,0.01,0.1));
-	draw(stonePos, rock, coconut, 0);
+	stonePos = Mult(stonePos, S(0.008 ,0.001,0.008));
+	draw(stonePos, rock, black, 0);
 }
 
 
@@ -255,7 +257,7 @@ void drawMap(){
 	m = Mult(m, Rz(1));
 	m = Mult(m, S(0.5 ,0.01, 0.5));
 
-	draw(m, map, stone, 0);
+	draw(m, map, paper, 0);
 
 	int i;
 	for(i = 0; i < numberOfRocks; i++){
