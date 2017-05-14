@@ -28,7 +28,7 @@ float distance = 20 * 0.01f;
 // mouse coordinates
 GLfloat xpos, ypos;
 vec3 right, direction;
-WorldObject *trees, *rocks, *controls;
+WorldObject *trees, *rocks, *controls, *controlPoints;
 
 void handleKeyPress(){
 	//	printf("%f %f\n", distance, direction.x);
@@ -136,7 +136,14 @@ void init(void)
 
 	trees = GenerateTrees(numberOfTrees);
 	rocks = GenerateRocks(numberOfRocks);
-	controls = GenerateControls(rocks, numberOfControls);
+
+	WorldObject* controlPoints = malloc(numberOfControls*20);
+	controlPoints[0] = rocks[2];
+	controlPoints[1] = rocks[3];
+	controlPoints[2] = rocks[5];
+	controlPoints[3] = trees[30];
+	controlPoints[4] = trees[10];
+	controls = GenerateControls(controlPoints, numberOfControls);
 }
 
 
@@ -246,7 +253,7 @@ void drawMap(){
 		a-= 3.14;
 	}
 
-	m = Mult(m, T( position.x + direction.x *0.7, position.y+0.5, position.z + direction.z * 0.7));
+	m = Mult(m, T( position.x + direction.x *0.7, position.y+0.65, position.z + direction.z * 0.7));
 	m = Mult(m, Rz(3.14/2));
 	m = Mult(m, Rx(-a ));
 	m = Mult(m, Rz(1));
