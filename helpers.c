@@ -34,12 +34,12 @@ WorldObject* GenerateTrees(int numberOfTrees){
   int i;
   double xRandom, zRandom, rRandom;
   WorldObject* trees = malloc(numberOfTrees*20);
-  int maxDistance = 41;
+  int maxDistance = 50;
 
   for(i = 0; i < numberOfTrees; i++){
     xRandom = random() % maxDistance + 0.01;
     zRandom = random() % maxDistance + 0.01;
-    rRandom = 0.6 + (random() % 3) * 0.1;
+    rRandom = 1 + (random() % 3) * 0.4;
     WorldObject t = {xRandom, zRandom, rRandom};
     trees[i] = t;
   }
@@ -71,8 +71,8 @@ WorldObject* GenerateRocks(int numberOfRocks){
   WorldObject* rocks = malloc(numberOfRocks*20);
 
   for(i = 0; i < numberOfRocks; i++){
-    xRandom = random() % 60 + 1 + 0.01; // +0.01 to avoid borders
-    zRandom = random() % 60 + 1 + 0.01;
+    xRandom = random() % 150 + 1 + 0.01; // +0.01 to avoid borders
+    zRandom = random() % 150 + 1 + 0.01;
     rRandom = 1.6 + (random() % 3) * 0.3;
     WorldObject r = {xRandom, zRandom, rRandom};
     rocks[i] = r;
@@ -304,7 +304,7 @@ Model* GenerateTerrain(TextureData *tex)
           }
         }
         // ERROR: Could be on a border
-        printf("ERROR: Point on a border?");
+        //printf("ERROR: Point on a border?");
         return 0;
       }
     }

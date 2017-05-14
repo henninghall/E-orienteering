@@ -9,7 +9,7 @@ TextureData ttex; // terrain
 
 float deltaTime = 20;
 float oldTimeSinceStart = 0;
-int numberOfTrees = 100, numberOfRocks = 10, numberOfControls = 5, windowSize = 800;
+int numberOfTrees = 50, numberOfRocks = 15, numberOfControls = 5, windowSize = 800;
 
 mat4 camMatrix, projectionMatrix;
 
@@ -22,7 +22,7 @@ vec3 position = { 1, 0, 1 };
 vec3 lookAtPos = { 0, 0, 5 };
 
 GLfloat mouseSpeed = 0.00005f;
-float distance = 20 * 0.008f;
+float distance = 20 * 0.018f;
 
 // mouse coordinates
 GLfloat xpos, ypos;
@@ -31,7 +31,6 @@ WorldObject *trees, *rocks, *controls, *controlPoints, *heightCurves;
 
 void handleKeyPress(){
 	//	printf("%f %f\n", distance, direction.x);
-
 	if (glutKeyIsDown('w')) {
 		position.x += distance * direction.x;
 		position.z += distance * direction.z;
@@ -139,11 +138,15 @@ void init(void)
 
 
 	WorldObject* controlPoints = malloc(numberOfControls*20);
-	controlPoints[0] = rocks[2];
-	controlPoints[1] = rocks[3];
-	controlPoints[2] = rocks[5];
-	controlPoints[3] = trees[30];
-	controlPoints[4] = trees[1];
+	controlPoints[0] = rocks[0];
+	controlPoints[1] = rocks[1];
+	controlPoints[2] = rocks[12];
+	controlPoints[3] = rocks[2];
+	controlPoints[4] = rocks[3];
+	controlPoints[5] = rocks[6];
+	controlPoints[6] = rocks[4];
+	controlPoints[7] = rocks[3];
+
 	controls = GenerateControls(controlPoints, numberOfControls);
 }
 
@@ -229,15 +232,19 @@ void drawTerrain(){
 	draw(modelView, terrain, texBranch, 1);
 }
 
+
+float worldOnMapScale = 0.0039;
+
+
 void drawMapRock(mat4 m, WorldObject rockObject){
-	mat4 stonePos = Mult(m, T(-rockObject.x * 0.01 + 0.5, 1, rockObject.z * 0.01 - 0.5));
+	mat4 stonePos = Mult(m, T(-rockObject.x * worldOnMapScale + 0.5, 1, rockObject.z * worldOnMapScale - 0.5));
 	stonePos = Mult(stonePos, S(0.008 ,0.001,0.008));
 	draw(stonePos, rock, black, 0);
 }
 
 void drawMapControl(mat4 m, WorldObject obj){
 	float scale = 0.07;
-	mat4 pos = Mult(m, T(-obj.x * 0.01 + 0.5, 1, obj.z * 0.01 - 0.5));
+	mat4 pos = Mult(m, T(-obj.x * worldOnMapScale + 0.5, 1, obj.z * worldOnMapScale - 0.5));
 	pos = Mult(pos, S(scale, scale, scale));
 	draw(pos, circle, purple, 0);
 }
@@ -247,23 +254,24 @@ void drawMapLine(mat4 m, WorldObject obj1, WorldObject obj2){
 	float zDiff = fabs(obj2.z-obj1.z);
 	float xPos = (obj1.x + obj2.x) / 2;
 	float zPos = (obj1.z + obj2.z) / 2;
-	float length = 0.01 * sqrt(xDiff * xDiff + zDiff * zDiff) - 0.11;
+	float length = worldOnMapScale* sqrt(xDiff * xDiff + zDiff * zDiff) - 0.11;
 	float angle = atan( xDiff / zDiff);
 
-	m = Mult(m, T(-xPos * 0.01 + 0.5, 1, zPos * 0.01 - 0.5));
-	m = Mult(m, Ry(angle ));
+	// correcting angle
+	if( obj2.z > obj1.z && obj2.x < obj1.x) angle = -angle;
+	if( obj2.x > obj1.x && obj2.z < obj1.z) angle = -angle;
+
+	m = Mult(m, T(-xPos * worldOnMapScale + 0.5, 1, zPos * worldOnMapScale - 0.5));
+	m = Mult(m, Ry(-angle));
 	m = Mult(m, S(0.005, 0.01, length));
 
 	draw(m, map, purple, 0);
 }
 
-float worldOnMapScale = 0.0039;
 void drawHeightCurve(mat4 m, WorldObject obj){
-	float scale = 0.0039;
-
-
+	float scale = 0.0040;
 	m = Mult(m, T(-obj.x * worldOnMapScale + 0.5, 1, obj.z * worldOnMapScale - 0.5));
-	m = Mult(m, S(scale ,scale ,scale));
+	m = Mult(m, S(scale, scale, scale));
 	draw(m, map, brown, 0);
 
 	//drawMapLine(m, obj1, obj2);
@@ -292,12 +300,10 @@ void drawMap(){
 	draw(m, map, paper, 0);
 
 	int i;
+	for(i = 0; i < 10000; i++) drawHeightCurve(m, heightCurves[i]);
 	for(i = 0; i < numberOfRocks; i++) drawMapRock(m, rocks[i]);
 	for(i = 0; i < numberOfControls; i++) drawMapControl(m, controls[i]);
 	for(i = 0; i < numberOfControls - 1; i++) drawMapLine(m, controls[i], controls[i+1]);
-	for(i = 0; i < 10000; i++) drawHeightCurve(m, heightCurves[i]);
-
-
 }
 
 void drawSkyBox(){
@@ -367,7 +373,7 @@ void display(void) {
 	updateLookAt();
 
 	drawSkyBox();
-	drawSphere();
+	//drawSphere();
 	drawTerrain();
 	drawTrees();
 	drawRocks();
