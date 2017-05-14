@@ -9,14 +9,14 @@ TextureData ttex; // terrain
 
 float deltaTime = 20;
 float oldTimeSinceStart = 0;
-int numberOfTrees = 100, numberOfRocks = 10, numberOfControls = 10, windowSize = 800;
+int numberOfTrees = 100, numberOfRocks = 10, numberOfControls = 5, windowSize = 800;
 
 mat4 camMatrix, projectionMatrix;
 
 int time = 0;
-Model *m, *m2, *terrain, *groundSphere, *tree, *skyBox, *rock, *map, *circle, *triangle;
+Model *m, *m2, *terrain, *groundSphere, *tree, *skyBox, *rock, *map, *circle;
 GLuint program, skyBoxProgram;
-GLuint tex1, tex2, texBranch, coconut, skyBoxTex, stone, paper, black, controlPoint;
+GLuint tex1, tex2, texBranch, coconut, skyBoxTex, stone, paper, black, purple, controlPoint;
 vec3 cam = {0, 5, 0};
 vec3 position = { 1, 0, 1 };
 vec3 lookAtPos = { 0, 0, 5 };
@@ -111,6 +111,7 @@ void init(void)
 	LoadTGATextureSimple("conc.tga", &stone);
 	LoadTGATextureSimple("paper.tga", &paper);
 	LoadTGATextureSimple("black.tga", &black);
+	LoadTGATextureSimple("purple.tga", &purple);
 	LoadTGATextureSimple("controlPoint.tga", &controlPoint);
 
 
@@ -122,7 +123,6 @@ void init(void)
 	groundSphere = LoadModelPlus("groundsphere.obj");
 	tree = LoadModelPlus("fir.obj");
 	circle = LoadModelPlus("circle.obj");
-	triangle = LoadModelPlus("triangle.obj");
 	rock = LoadModelPlus("stone.obj");
 	skyBox = LoadModelPlus("skybox.obj");
 	map = LoadModelPlus("cubeplus.obj");
@@ -183,12 +183,12 @@ void drawRock(WorldObject obj){
 }
 
 void drawControl(WorldObject obj){
-	double sizeConstant = 0.4;
-	double height = 0.4;
-	double y = getGroundY(obj.x,obj.z, &ttex);
-	mat4 t = T(obj.x, y - height,obj.z);
+	double size = 0.4;
+	double height = 0.3;
+	double y = getGroundY(obj.x, obj.z + obj.r, &ttex);
+	mat4 t = T(obj.x, y - height, obj.z + obj.r);
 	mat4 r = Rx(3.14);
-	mat4 s = S(obj.r * sizeConstant, obj.r * sizeConstant, obj.r * sizeConstant);
+	mat4 s = S(size, size, size);
 	mat4 modelView = Mult(Mult(t, s),r);
 	draw(modelView, map, controlPoint, 1);
 }
@@ -225,12 +225,19 @@ void drawMapRock(mat4 m, WorldObject rockObject){
 	draw(stonePos, rock, black, 0);
 }
 
+void drawMapControl(mat4 m, WorldObject rockObject){
+	float scale = 0.07;
+	mat4 pos = Mult(m, T(-rockObject.x * 0.01 + 0.5, 1, rockObject.z * 0.01 - 0.5));
+	pos = Mult(pos, S(scale, scale, scale));
+	draw(pos, circle, purple, 0);
+}
 
 double a = 0;
 double aPrev = 0;
 int spins = 0;
 void drawMap(){
 	mat4 m = IdentityMatrix();
+
 	aPrev = a;
 	a = atan(direction.z/direction.x) - 3.14 * spins;
 
@@ -249,7 +256,7 @@ void drawMap(){
 
 	int i;
 	for(i = 0; i < numberOfRocks; i++) drawMapRock(m, rocks[i]);
-	for(i = 0; i < numberOfControls; i++) drawMapRock(m, rocks[i]);
+	for(i = 0; i < numberOfControls; i++) drawMapControl(m, controls[i]);
 
 }
 
@@ -322,7 +329,7 @@ void display(void) {
 	drawSkyBox();
 	drawSphere();
 	drawTerrain();
-	//drawTrees();
+	drawTrees();
 	drawRocks();
 	drawMap();
 	drawControls();

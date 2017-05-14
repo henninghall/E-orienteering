@@ -50,12 +50,13 @@ WorldObject* GenerateTrees(int numberOfTrees){
 // Controls : actual control point object
 WorldObject* GenerateControls(WorldObject *controlPoints, int numberOfControls){
   int i;
-  double x, z, r = 1.0;
+  double x, z, r;
   WorldObject* controls = malloc(numberOfControls*20);
 
   for(i = 0; i < numberOfControls; i++){
     x = controlPoints[i].x;
-    z = controlPoints[i].z + controlPoints[i].r * 0.91;
+    z = controlPoints[i].z;
+    r = controlPoints[i].r;
     WorldObject cur = {x, z, r};
     controls[i] = cur;
   }
