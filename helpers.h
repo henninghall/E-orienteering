@@ -27,3 +27,4 @@ Model* GenerateTerrain(TextureData *tex);
 WorldObject* GenerateTrees();
 WorldObject* GenerateRocks();
 WorldObject* GenerateControls();
+WorldObject* GenerateHeightCurves( TextureData *tex);

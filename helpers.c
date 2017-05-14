@@ -177,6 +177,51 @@ Model* GenerateTerrain(TextureData *tex)
     return model;
   }
 
+
+  WorldObject* GenerateHeightCurves(TextureData *tex){
+
+    WorldObject *curvePoints;
+    curvePoints = malloc(sizeof(GLfloat) * triangleCount);
+
+    int numberOfCurvePoints = 0;
+    int i;
+    for (i = 0; i < triangleCount*3; i+=6){
+
+      // each vertex
+      int v;
+      float maxY, minY;
+      float maxX, maxZ, minX, minZ;
+      vec3 vert;
+
+      // Each vertex per square
+      for (v = 0; v < 6; v++){
+        int vertexIndex = indexArray[i+v];
+        vert.x = vertexArray[vertexIndex*3 + 0];
+        vert.y = vertexArray[vertexIndex*3 + 1];
+        vert.z = vertexArray[vertexIndex*3 + 2];
+
+        if(v == 0 || vert.y > maxY) maxY = vert.y;
+        if(v == 0 || vert.y < minY) minY = vert.y;
+
+        if(v == 0 || vert.x > maxX) maxX = vert.x;
+        if(v == 0 || vert.x < minX) minX = vert.x;
+        if(v == 0 || vert.z > maxZ) maxZ = vert.z;
+        if(v == 0 || vert.z < maxZ) minZ = vert.z;
+      }
+
+      int j;
+      int equ = 4;
+      for(j = 0; j<20 ;j++) {
+        if(minY < equ*j && maxY >= equ*j){
+          WorldObject cur = {vert.x, vert.z, 0};
+          curvePoints[numberOfCurvePoints++] = cur;
+        }
+      }
+    }
+    return curvePoints;
+  }
+
+
   float getGroundY(float xIn, float zIn, TextureData *tex){
 
     int i;

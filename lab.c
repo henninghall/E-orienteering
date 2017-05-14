@@ -16,7 +16,7 @@ mat4 camMatrix, projectionMatrix;
 int time = 0;
 Model *m, *m2, *terrain, *groundSphere, *tree, *skyBox, *rock, *map, *circle;
 GLuint program, skyBoxProgram;
-GLuint tex1, tex2, texBranch, coconut, skyBoxTex, stone, paper, black, purple, controlPoint;
+GLuint tex1, tex2, texBranch, coconut, skyBoxTex, stone, paper, black, brown, purple, controlPoint;
 vec3 cam = {0, 5, 0};
 vec3 position = { 1, 0, 1 };
 vec3 lookAtPos = { 0, 0, 5 };
@@ -27,7 +27,7 @@ float distance = 20 * 0.008f;
 // mouse coordinates
 GLfloat xpos, ypos;
 vec3 right, direction;
-WorldObject *trees, *rocks, *controls, *controlPoints;
+WorldObject *trees, *rocks, *controls, *controlPoints, *heightCurves;
 
 void handleKeyPress(){
 	//	printf("%f %f\n", distance, direction.x);
@@ -110,9 +110,9 @@ void init(void)
 	LoadTGATextureSimple("conc.tga", &stone);
 	LoadTGATextureSimple("paper.tga", &paper);
 	LoadTGATextureSimple("black.tga", &black);
+	LoadTGATextureSimple("brown.tga", &brown);
 	LoadTGATextureSimple("purple.tga", &purple);
 	LoadTGATextureSimple("controlPoint.tga", &controlPoint);
-
 
 	// Load terrain data
 	LoadTGATextureData("fft-terrain.tga", &ttex);
@@ -135,6 +135,8 @@ void init(void)
 
 	trees = GenerateTrees(numberOfTrees);
 	rocks = GenerateRocks(numberOfRocks);
+	heightCurves = GenerateHeightCurves(&ttex);
+
 
 	WorldObject* controlPoints = malloc(numberOfControls*20);
 	controlPoints[0] = rocks[2];
@@ -221,6 +223,7 @@ void drawControls(){
 }
 
 
+
 void drawTerrain(){
 	mat4 modelView = IdentityMatrix();
 	draw(modelView, terrain, texBranch, 1);
@@ -254,6 +257,18 @@ void drawMapLine(mat4 m, WorldObject obj1, WorldObject obj2){
 	draw(m, map, purple, 0);
 }
 
+float worldOnMapScale = 0.0039;
+void drawHeightCurve(mat4 m, WorldObject obj){
+	float scale = 0.0039;
+
+
+	m = Mult(m, T(-obj.x * worldOnMapScale + 0.5, 1, obj.z * worldOnMapScale - 0.5));
+	m = Mult(m, S(scale ,scale ,scale));
+	draw(m, map, brown, 0);
+
+	//drawMapLine(m, obj1, obj2);
+}
+
 double a = 0;
 double aPrev = 0;
 int spins = 0;
@@ -280,6 +295,7 @@ void drawMap(){
 	for(i = 0; i < numberOfRocks; i++) drawMapRock(m, rocks[i]);
 	for(i = 0; i < numberOfControls; i++) drawMapControl(m, controls[i]);
 	for(i = 0; i < numberOfControls - 1; i++) drawMapLine(m, controls[i], controls[i+1]);
+	for(i = 0; i < 10000; i++) drawHeightCurve(m, heightCurves[i]);
 
 
 }
