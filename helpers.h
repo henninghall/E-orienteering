@@ -26,3 +26,4 @@ float getGroundY(float xIn, float zIn, TextureData *tex);
 Model* GenerateTerrain(TextureData *tex);
 WorldObject* GenerateTrees();
 WorldObject* GenerateRocks();
+WorldObject* GenerateControls();

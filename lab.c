@@ -5,48 +5,30 @@
 #include "LoadTGA.h"
 #include "helpers.h"
 
-
-Point3D lightSourcesColorsArr[] = { {1.0f, 0.0f, 0.0f}, // Red light
-{0.0f, 1.0f, 0.0f}, // Green light
-{0.0f, 0.0f, 1.0f}, // Blue light
-{1.0f, 1.0f, 1.0f} }; // White light
-GLfloat specularExponent[] = {10.0, 20.0, 60.0, 5.0};
-GLint isDirectional[] = {0,0,1,1};
-Point3D lightSourcesDirectionsPositions[] = { {10.0f, 5.0f, 0.0f}, // Red light, positional
-{0.0f, 5.0f, 10.0f}, // Green light, positional
-{-1.0f, 0.0f, 0.0f}, // Blue light along X
-{0.0f, 0.0f, -1.0f} }; // White light along Z
-
 TextureData ttex; // terrain
 
 float deltaTime = 20;
 float oldTimeSinceStart = 0;
-int numberOfTrees = 100;
-int numberOfRocks = 10;
-int windowSize = 800;
+int numberOfTrees = 100, numberOfRocks = 10, numberOfControls = 10, windowSize = 800;
 
-mat4 camMatrix,projectionMatrix;
+mat4 camMatrix, projectionMatrix;
 
 int time = 0;
-Model *m, *m2, *terrain, *groundSphere, *tree, *skyBox, *rock, *map;
+Model *m, *m2, *terrain, *groundSphere, *tree, *skyBox, *rock, *map, *circle, *triangle;
 GLuint program, skyBoxProgram;
-GLuint tex1, tex2, texBranch, coconut, skyBoxTex, stone, paper, black;
+GLuint tex1, tex2, texBranch, coconut, skyBoxTex, stone, paper, black, controlPoint;
 vec3 cam = {0, 5, 0};
-vec3 position = { 22, 0, 22 };
+vec3 position = { 1, 0, 1 };
 vec3 lookAtPos = { 0, 0, 5 };
 
 GLfloat speed = 0.01f; // 3 units / second
 GLfloat mouseSpeed = 0.00005f;
 float distance = 20 * 0.01f;
 
-// mouese coordinates
-GLfloat xpos;
-GLfloat ypos;
-vec3 right;
-vec3 direction;
-
-WorldObject *trees;
-WorldObject *rocks;
+// mouse coordinates
+GLfloat xpos, ypos;
+vec3 right, direction;
+WorldObject *trees, *rocks, *controls;
 
 void handleKeyPress(){
 	//	printf("%f %f\n", distance, direction.x);
@@ -113,21 +95,13 @@ void updateCameraPos(){
 
 void init(void)
 {
-	// GL inits
 	glClearColor(0.2,0.2,0.5,0);
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
-	printError("GL inits");
-
 	projectionMatrix = frustum(-0.1, 0.1, -0.1, 0.1, 0.2, 50.0);
-
-	// Load and compile shader
 	program = loadShaders("terrain-new.vert", "terrain-new.frag");
 	skyBoxProgram = loadShaders("skybox.vert", "skybox.frag");
-
 	glUseProgram(program);
-	printError("init shader");
-
 	glUniformMatrix4fv(glGetUniformLocation(program, "projMatrix"), 1, GL_TRUE, projectionMatrix.m);
 	//	glUniform1i(glGetUniformLocation(program, "texUnit"), 0); // Texture unit 0
 	LoadTGATextureSimple("maskros512.tga", &tex1);
@@ -137,12 +111,8 @@ void init(void)
 	LoadTGATextureSimple("conc.tga", &stone);
 	LoadTGATextureSimple("paper.tga", &paper);
 	LoadTGATextureSimple("black.tga", &black);
+	LoadTGATextureSimple("controlPoint.tga", &controlPoint);
 
-
-	glUniform3fv(glGetUniformLocation(program, "lightSourcesDirPosArr"), 4, &lightSourcesDirectionsPositions[0].x);
-	glUniform3fv(glGetUniformLocation(program, "lightSourcesColorArr"), 4, &lightSourcesColorsArr[0].x);
-	glUniform1fv(glGetUniformLocation(program, "specularExponent"), 4, specularExponent);
-	glUniform1iv(glGetUniformLocation(program, "isDirectional"), 4, isDirectional);
 
 	// Load terrain data
 	LoadTGATextureData("fft-terrain.tga", &ttex);
@@ -151,6 +121,8 @@ void init(void)
 
 	groundSphere = LoadModelPlus("groundsphere.obj");
 	tree = LoadModelPlus("fir.obj");
+	circle = LoadModelPlus("circle.obj");
+	triangle = LoadModelPlus("triangle.obj");
 	rock = LoadModelPlus("stone.obj");
 	skyBox = LoadModelPlus("skybox.obj");
 	map = LoadModelPlus("cubeplus.obj");
@@ -164,6 +136,7 @@ void init(void)
 
 	trees = GenerateTrees(numberOfTrees);
 	rocks = GenerateRocks(numberOfRocks);
+	controls = GenerateControls(rocks, numberOfControls);
 }
 
 
@@ -209,6 +182,16 @@ void drawRock(WorldObject obj){
 	draw(modelView, rock, stone, 1);
 }
 
+void drawControl(WorldObject obj){
+	double sizeConstant = 0.4;
+	double height = 0.4;
+	double y = getGroundY(obj.x,obj.z, &ttex);
+	mat4 t = T(obj.x, y - height,obj.z);
+	mat4 r = Rx(3.14);
+	mat4 s = S(obj.r * sizeConstant, obj.r * sizeConstant, obj.r * sizeConstant);
+	mat4 modelView = Mult(Mult(t, s),r);
+	draw(modelView, map, controlPoint, 1);
+}
 
 void drawTrees(){
 	int i;
@@ -224,6 +207,12 @@ void drawRocks(){
 	}
 }
 
+void drawControls(){
+	int i;
+	for(i = 0; i < numberOfControls; i++){
+		drawControl(controls[i]);
+	}
+}
 
 void drawTerrain(){
 	mat4 modelView = IdentityMatrix();
@@ -240,7 +229,6 @@ void drawMapRock(mat4 m, WorldObject rockObject){
 double a = 0;
 double aPrev = 0;
 int spins = 0;
-
 void drawMap(){
 	mat4 m = IdentityMatrix();
 	aPrev = a;
@@ -260,9 +248,9 @@ void drawMap(){
 	draw(m, map, paper, 0);
 
 	int i;
-	for(i = 0; i < numberOfRocks; i++){
-		drawMapRock(m, rocks[i]);
-	}
+	for(i = 0; i < numberOfRocks; i++) drawMapRock(m, rocks[i]);
+	for(i = 0; i < numberOfControls; i++) drawMapRock(m, rocks[i]);
+
 }
 
 void drawSkyBox(){
@@ -334,10 +322,10 @@ void display(void) {
 	drawSkyBox();
 	drawSphere();
 	drawTerrain();
-	drawTrees();
+	//drawTrees();
 	drawRocks();
 	drawMap();
-
+	drawControls();
 
 	glutSwapBuffers();
 }

@@ -45,6 +45,24 @@ WorldObject* GenerateTrees(int numberOfTrees){
   return trees;
 }
 
+
+// ControlPoint = stone object etc
+// Controls : actual control point object
+WorldObject* GenerateControls(WorldObject *controlPoints, int numberOfControls){
+  int i;
+  double x, z, r = 1.0;
+  WorldObject* controls = malloc(numberOfControls*20);
+
+  for(i = 0; i < numberOfControls; i++){
+    x = controlPoints[i].x;
+    z = controlPoints[i].z + controlPoints[i].r * 0.91;
+    WorldObject cur = {x, z, r};
+    controls[i] = cur;
+  }
+  return controls;
+}
+
+
 WorldObject* GenerateRocks(int numberOfRocks){
   int i;
   double xRandom, zRandom, rRandom;
@@ -53,7 +71,7 @@ WorldObject* GenerateRocks(int numberOfRocks){
   for(i = 0; i < numberOfRocks; i++){
     xRandom = random() % 60 + 1 + 0.01; // +0.01 to avoid borders
     zRandom = random() % 60 + 1 + 0.01;
-    rRandom = 2.0 + (random() % 3) * 0.1;
+    rRandom = 1.6 + (random() % 3) * 0.3;
     WorldObject r = {xRandom, zRandom, rRandom};
     rocks[i] = r;
   }
