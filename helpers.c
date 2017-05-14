@@ -34,10 +34,11 @@ WorldObject* GenerateTrees(int numberOfTrees){
   int i;
   double xRandom, zRandom, rRandom;
   WorldObject* trees = malloc(numberOfTrees*20);
+  int maxDistance = 41;
 
   for(i = 0; i < numberOfTrees; i++){
-    xRandom = random() % 40 + 1 + 0.01; // +0.01 to avoid borders
-    zRandom = random() % 40 + 1 + 0.01;
+    xRandom = random() % maxDistance + 0.01;
+    zRandom = random() % maxDistance + 0.01;
     rRandom = 0.6 + (random() % 3) * 0.1;
     WorldObject t = {xRandom, zRandom, rRandom};
     trees[i] = t;

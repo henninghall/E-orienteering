@@ -21,9 +21,8 @@ vec3 cam = {0, 5, 0};
 vec3 position = { 1, 0, 1 };
 vec3 lookAtPos = { 0, 0, 5 };
 
-GLfloat speed = 0.01f; // 3 units / second
 GLfloat mouseSpeed = 0.00005f;
-float distance = 20 * 0.01f;
+float distance = 20 * 0.008f;
 
 // mouse coordinates
 GLfloat xpos, ypos;
@@ -54,8 +53,8 @@ void handleKeyPress(){
 void handleCollision(WorldObject obj) {
 	double xDiff, zDiff;
 
-	xDiff = abs(obj.x - position.x);
-	zDiff = abs(obj.z - position.z);
+	xDiff = fabs(obj.x - position.x);
+	zDiff = fabs(obj.z - position.z);
 	if(xDiff < obj.r && zDiff < obj.r){
 		// Hanle collision by moving camera to closest border of collision radie.
 		// Closes middle of object on x axis : keep x position and move camera to outer boarder on z axis
@@ -98,7 +97,7 @@ void init(void)
 	glClearColor(0.2,0.2,0.5,0);
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
-	projectionMatrix = frustum(-0.1, 0.1, -0.1, 0.1, 0.2, 50.0);
+	projectionMatrix = frustum(-0.1, 0.1, -0.1, 0.1, 0.2, 200.0);
 	program = loadShaders("terrain-new.vert", "terrain-new.frag");
 	skyBoxProgram = loadShaders("skybox.vert", "skybox.frag");
 	glUseProgram(program);
@@ -142,7 +141,7 @@ void init(void)
 	controlPoints[1] = rocks[3];
 	controlPoints[2] = rocks[5];
 	controlPoints[3] = trees[30];
-	controlPoints[4] = trees[10];
+	controlPoints[4] = trees[1];
 	controls = GenerateControls(controlPoints, numberOfControls);
 }
 
@@ -221,6 +220,7 @@ void drawControls(){
 	}
 }
 
+
 void drawTerrain(){
 	mat4 modelView = IdentityMatrix();
 	draw(modelView, terrain, texBranch, 1);
@@ -232,11 +232,26 @@ void drawMapRock(mat4 m, WorldObject rockObject){
 	draw(stonePos, rock, black, 0);
 }
 
-void drawMapControl(mat4 m, WorldObject rockObject){
+void drawMapControl(mat4 m, WorldObject obj){
 	float scale = 0.07;
-	mat4 pos = Mult(m, T(-rockObject.x * 0.01 + 0.5, 1, rockObject.z * 0.01 - 0.5));
+	mat4 pos = Mult(m, T(-obj.x * 0.01 + 0.5, 1, obj.z * 0.01 - 0.5));
 	pos = Mult(pos, S(scale, scale, scale));
 	draw(pos, circle, purple, 0);
+}
+
+void drawMapLine(mat4 m, WorldObject obj1, WorldObject obj2){
+	float xDiff = fabs(obj2.x-obj1.x);
+	float zDiff = fabs(obj2.z-obj1.z);
+	float xPos = (obj1.x + obj2.x) / 2;
+	float zPos = (obj1.z + obj2.z) / 2;
+	float length = 0.01 * sqrt(xDiff * xDiff + zDiff * zDiff) - 0.11;
+	float angle = atan( xDiff / zDiff);
+
+	m = Mult(m, T(-xPos * 0.01 + 0.5, 1, zPos * 0.01 - 0.5));
+	m = Mult(m, Ry(angle ));
+	m = Mult(m, S(0.005, 0.01, length));
+
+	draw(m, map, purple, 0);
 }
 
 double a = 0;
@@ -264,6 +279,8 @@ void drawMap(){
 	int i;
 	for(i = 0; i < numberOfRocks; i++) drawMapRock(m, rocks[i]);
 	for(i = 0; i < numberOfControls; i++) drawMapControl(m, controls[i]);
+	for(i = 0; i < numberOfControls - 1; i++) drawMapLine(m, controls[i], controls[i+1]);
+
 
 }
 
