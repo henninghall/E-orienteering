@@ -31,7 +31,7 @@ const vec3 light = vec3(0.58, 0.58, 0.58);
 float shade;
 shade = dot(normalize(normal), light);
 
-if(shade < 0.2) shade = 0.2;
+if(shade < 0.2) shade = 0.19 + shade * 0.1;
 
 if(showShadow == false) shade = 1.0;
 

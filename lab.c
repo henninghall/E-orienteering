@@ -9,7 +9,7 @@ TextureData ttex; // terrain
 
 float deltaTime = 20;
 float oldTimeSinceStart = 0;
-int numberOfTrees = 2000, numberOfRocks = 20, numberOfControls = 5, windowSize = 800;
+int numberOfTrees = 1000, numberOfRocks = 20, numberOfControls = 5, windowSize = 800;
 
 mat4 camMatrix, projectionMatrix;
 
