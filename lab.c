@@ -9,7 +9,7 @@ TextureData ttex; // terrain
 
 float deltaTime = 20;
 float oldTimeSinceStart = 0;
-int numberOfTrees = 250, numberOfRocks = 20, numberOfControls = 6, windowSize = 800;
+int numberOfTrees = 2050, numberOfRocks = 20, numberOfControls = 6, windowSize = 800;
 
 mat4 camMatrix, projectionMatrix;
 
@@ -22,7 +22,7 @@ vec3 position = { 1, 0, 1 };
 vec3 lookAtPos = { 0, 0, 5 };
 
 GLfloat mouseSpeed = 0.00005f;
-float distance = 20 * 0.018f;
+float distance = 20 * 0.01f;
 
 // mouse coordinates
 GLfloat xpos, ypos;
@@ -51,7 +51,6 @@ void handleKeyPress(){
 
 void handleCollision(WorldObject obj) {
 	double xDiff, zDiff;
-
 	xDiff = fabs(obj.x - position.x);
 	zDiff = fabs(obj.z - position.z);
 	if(xDiff < obj.r && zDiff < obj.r){
@@ -106,7 +105,7 @@ void updateCameraPos(){
 
 void init(void)
 {
-	glClearColor(0.2,0.2,0.5,0);
+	glClearColor(0,0,0,0);
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 	projectionMatrix = frustum(-0.1, 0.1, -0.1, 0.1, 0.2, 200.0);
@@ -420,7 +419,7 @@ int main(int argc, char **argv)
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH);
 	glutInitContextVersion(3, 2);
 	glutInitWindowSize (windowSize, windowSize);
-	glutCreateWindow ("E-ol");
+	glutCreateWindow ("E-orienteering");
 	glutDisplayFunc(display);
 	//glutSetCursor(0);
 	init();
