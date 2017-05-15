@@ -19,6 +19,7 @@ typedef struct WorldObject {
 	float x;
 	float z;
 	float r;
+	float y;
 } WorldObject;
 
 

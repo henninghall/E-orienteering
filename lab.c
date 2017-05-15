@@ -9,7 +9,7 @@ TextureData ttex; // terrain
 
 float deltaTime = 20;
 float oldTimeSinceStart = 0;
-int numberOfTrees = 50, numberOfRocks = 15, numberOfControls = 5, windowSize = 800;
+int numberOfTrees = 2000, numberOfRocks = 20, numberOfControls = 5, windowSize = 800;
 
 mat4 camMatrix, projectionMatrix;
 
@@ -82,6 +82,7 @@ void handleCollisions() {
 		WorldObject obj = rocks[i];
 		handleCollision(obj);
 	}
+
 }
 
 void updateCameraPos(){
@@ -136,8 +137,7 @@ void init(void)
 	rocks = GenerateRocks(numberOfRocks);
 	heightCurves = GenerateHeightCurves(&ttex);
 
-
-	WorldObject* controlPoints = malloc(numberOfControls*20);
+	WorldObject* controlPoints = malloc(numberOfControls*25);
 	controlPoints[0] = rocks[0];
 	controlPoints[1] = rocks[1];
 	controlPoints[2] = rocks[12];
@@ -160,22 +160,10 @@ void draw(mat4 modelView, Model *m, GLuint texture, int showShadow){
 	DrawModel(m, program, "inPosition", "inNormal", "inTexCoord");
 }
 
-void drawSphere(){
-	vec3 pos;
-	float groundSphereHeight = 0.8;
-	pos.x = 30 + 3* sin(time*0.05);
-	pos.z = 30 + 3* cos (time*0.05);
-	pos.y = getGroundY(pos.x,	pos.z, &ttex);
-	mat4 t = T(pos.x, pos.y - groundSphereHeight, pos.z);
-	mat4 s = S(0.4,0.4,0.4);
-	mat4 modelView = Mult(t, s);
-	draw(modelView, groundSphere, tex2, 1);
-}
 
 void drawTree1(WorldObject curTree){
 	double sizeConstant = 0.7;
-	double y = getGroundY(curTree.x,	curTree.z, &ttex);
-	mat4 t = T(curTree.x, y,curTree.z);
+	mat4 t = T(curTree.x, curTree.y, curTree.z);
 	mat4 r = Rx(3.14);
 	mat4 s = S(curTree.r * sizeConstant, curTree.r * sizeConstant, curTree.r * sizeConstant);
 	mat4 modelView = Mult(Mult(t, s),r);
@@ -185,8 +173,7 @@ void drawTree1(WorldObject curTree){
 void drawRock(WorldObject obj){
 	double sizeConstant = 0.7;
 	double height = 0.8;
-	double y = getGroundY(obj.x,obj.z, &ttex);
-	mat4 t = T(obj.x, y - height,obj.z);
+	mat4 t = T(obj.x, obj.y - height,obj.z);
 	mat4 r = Rx(3.14);
 	mat4 s = S(obj.r * sizeConstant, obj.r * sizeConstant, obj.r * sizeConstant);
 	mat4 modelView = Mult(Mult(t, s),r);
@@ -225,16 +212,12 @@ void drawControls(){
 	}
 }
 
-
-
 void drawTerrain(){
 	mat4 modelView = IdentityMatrix();
 	draw(modelView, terrain, texBranch, 1);
 }
 
-
 float worldOnMapScale = 0.0039;
-
 
 void drawMapRock(mat4 m, WorldObject rockObject){
 	mat4 stonePos = Mult(m, T(-rockObject.x * worldOnMapScale + 0.5, 1, rockObject.z * worldOnMapScale - 0.5));
@@ -373,7 +356,6 @@ void display(void) {
 	updateLookAt();
 
 	drawSkyBox();
-	//drawSphere();
 	drawTerrain();
 	drawTrees();
 	drawRocks();

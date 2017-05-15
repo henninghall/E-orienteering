@@ -32,50 +32,54 @@ bool PointInTriangle (vec3 pt, vec3 v1, vec3 v2, vec3 v3)
 
 WorldObject* GenerateTrees(int numberOfTrees){
   int i;
-  double xRandom, zRandom, rRandom;
-  WorldObject* trees = malloc(numberOfTrees*20);
-  int maxDistance = 50;
+  double xRandom, zRandom, rRandom, y;
+  WorldObject* trees = malloc(numberOfTrees*16);
+  int maxDistance = 250;
 
   for(i = 0; i < numberOfTrees; i++){
     xRandom = random() % maxDistance + 0.01;
     zRandom = random() % maxDistance + 0.01;
     rRandom = 1 + (random() % 3) * 0.4;
-    WorldObject t = {xRandom, zRandom, rRandom};
+    y = getGroundY(xRandom,	zRandom, NULL);
+    WorldObject t = {xRandom, zRandom, rRandom, y};
     trees[i] = t;
   }
   return trees;
 }
 
 
+
 // ControlPoint = stone object etc
 // Controls : actual control point object
 WorldObject* GenerateControls(WorldObject *controlPoints, int numberOfControls){
   int i;
-  double x, z, r;
-  WorldObject* controls = malloc(numberOfControls*20);
+  double x, z, r, y;
+  WorldObject* controls = malloc(numberOfControls*16);
 
   for(i = 0; i < numberOfControls; i++){
     x = controlPoints[i].x;
     z = controlPoints[i].z;
     r = controlPoints[i].r;
-    WorldObject cur = {x, z, r};
+    y = getGroundY(x,	z, NULL);
+    WorldObject cur = {x, z, r, y};
     controls[i] = cur;
   }
   return controls;
 }
 
-
 WorldObject* GenerateRocks(int numberOfRocks){
   int i;
-  double xRandom, zRandom, rRandom;
-  WorldObject* rocks = malloc(numberOfRocks*20);
+  double x, z, r, y;
+  WorldObject* rocks = malloc(numberOfRocks*16);
+  int maxDistance = 250;
 
   for(i = 0; i < numberOfRocks; i++){
-    xRandom = random() % 150 + 1 + 0.01; // +0.01 to avoid borders
-    zRandom = random() % 150 + 1 + 0.01;
-    rRandom = 1.6 + (random() % 3) * 0.3;
-    WorldObject r = {xRandom, zRandom, rRandom};
-    rocks[i] = r;
+    x = random() % maxDistance + 0.01; // +0.01 to avoid borders
+    z = random() % maxDistance + 0.01;
+    r = 1.6 + (random() % 3) * 0.3;
+    y = getGroundY(x,	z, NULL);
+    WorldObject w = {x, z, r, y};
+    rocks[i] = w;
   }
   return rocks;
 }
@@ -177,7 +181,6 @@ Model* GenerateTerrain(TextureData *tex)
     return model;
   }
 
-
   WorldObject* GenerateHeightCurves(TextureData *tex){
 
     WorldObject *curvePoints;
@@ -190,7 +193,6 @@ Model* GenerateTerrain(TextureData *tex)
       // each vertex
       int v;
       float maxY, minY;
-      float maxX, maxZ, minX, minZ;
       vec3 vert;
 
       // Each vertex per square
@@ -202,11 +204,6 @@ Model* GenerateTerrain(TextureData *tex)
 
         if(v == 0 || vert.y > maxY) maxY = vert.y;
         if(v == 0 || vert.y < minY) minY = vert.y;
-
-        if(v == 0 || vert.x > maxX) maxX = vert.x;
-        if(v == 0 || vert.x < minX) minX = vert.x;
-        if(v == 0 || vert.z > maxZ) maxZ = vert.z;
-        if(v == 0 || vert.z < maxZ) minZ = vert.z;
       }
 
       int j;
@@ -275,26 +272,17 @@ Model* GenerateTerrain(TextureData *tex)
           p3.z = vertexArray[vertexIndex*3 + 2];
 
 
-
           if (PointInTriangle(p,p1,p2,p3)) {
 
             float dist1  = fabs(p.x - p1.x) + fabs(p.z - p1.z);
             float dist2  = fabs(p.x - p2.x) + fabs(p.z - p2.z);
             float dist3  = fabs(p.x - p3.x) + fabs(p.z - p3.z);
 
-            //printf("dist1 : %f\n", dist1);
-            //printf("dist2 : %f\n", dist2);
-            //printf("dist3 : %f\n", dist3);
-
             float totalDist = dist1 + dist2 + dist3;
 
             float weight1 = (totalDist-dist1)*(totalDist-dist1);
             float weight2 = (totalDist-dist2)*(totalDist-dist2);
             float weight3 = (totalDist-dist3)*(totalDist-dist3);
-
-            //  printf("weight1 : %f\n", weight1);
-            //  printf("weight2 : %f\n", weight2);
-            //  printf("weight3 : %f\n", weight3);
 
             float totalWeight = weight1 + weight2 + weight3;
 
@@ -310,6 +298,6 @@ Model* GenerateTerrain(TextureData *tex)
     }
 
     // Error no square found
-    printf("ERROR:No square found");
+  //  printf("ERROR:No square found");
     return 0;
   }
