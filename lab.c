@@ -169,7 +169,7 @@ void draw(mat4 modelView, Model *m, GLuint texture, int showShadow){
 void drawTree1(WorldObject curTree){
 	double sizeConstant = 0.7;
 	mat4 t = T(curTree.x, curTree.y, curTree.z);
-	mat4 r = Rx(3.14);
+	mat4 r = Rx(M_PI);
 	mat4 s = S(curTree.r * sizeConstant, curTree.r * sizeConstant, curTree.r * sizeConstant);
 	mat4 modelView = Mult(Mult(t, s),r);
 	draw(modelView, tree, fir, 1);
@@ -179,7 +179,7 @@ void drawRock(WorldObject obj){
 	double sizeConstant = 0.7;
 	double height = 0.8;
 	mat4 t = T(obj.x, obj.y - height,obj.z);
-	mat4 r = Rx(3.14);
+	mat4 r = Rx(M_PI);
 	mat4 s = S(obj.r * sizeConstant, obj.r * sizeConstant, obj.r * sizeConstant);
 	mat4 modelView = Mult(Mult(t, s),r);
 	draw(modelView, rock, stone, 1);
@@ -187,10 +187,10 @@ void drawRock(WorldObject obj){
 
 void drawControl(WorldObject obj){
 	double size = 0.4;
-	double height = 0.3;
+	double height = 0.4;
 	double y = getGroundY(obj.x, obj.z - obj.r);
 	mat4 t = T(obj.x, y - height, obj.z - obj.r);
-	mat4 r = Rx(3.14);
+	mat4 r = Rx(M_PI);
 	mat4 s = S(size, size, size);
 	mat4 modelView = Mult(Mult(t, s),r);
 	draw(modelView, map, controlPoint, 1);
@@ -280,15 +280,15 @@ void drawMap(){
 	mat4 m = IdentityMatrix();
 
 	aPrev = a;
-	a = atan(direction.z/direction.x) - 3.14 * spins;
+	a = atan(direction.z/direction.x) - M_PI * spins;
 
 	if(fabs(aPrev - a) > 1.0) {
 		spins++;
-		a-= 3.14;
+		a-= M_PI;
 	}
 
 	m = Mult(m, T( position.x + direction.x *0.7, position.y+0.65, position.z + direction.z * 0.7));
-	m = Mult(m, Rz(3.14/2));
+	m = Mult(m, Rz(M_PI/2));
 	m = Mult(m, Rx(-a ));
 	m = Mult(m, Rz(1));
 	m = Mult(m, S(0.5 ,0.001, 0.5));
@@ -312,7 +312,7 @@ void drawSkyBox(){
 	float t = 0.2;
 	mat4 trans = T(t, t, t);
 	mat4 scale = S(s, s, s);
-	mat4 rot = Rx(3.14);
+	mat4 rot = Rx(M_PI);
 	mat4 total = Mult(Mult(trans, scale),rot);
 	glUseProgram(skyBoxProgram);
 	glUniformMatrix4fv(glGetUniformLocation(skyBoxProgram, "lookAtMatrix"), 1, GL_TRUE, skyBoxLookAt.m);
@@ -342,9 +342,9 @@ void updateLookAt(){
 	direction = newDirection;
 
 	vec3 newRight =  {
-		sin(horizontalAngle - 3.14f/2.0f),
+		sin(horizontalAngle - M_PI/2.0f),
 		0,
-		cos(horizontalAngle - 3.14f/2.0f)
+		cos(horizontalAngle - M_PI/2.0f)
 	};
 	right = newRight;
 
