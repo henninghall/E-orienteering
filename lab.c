@@ -9,14 +9,14 @@ TextureData ttex; // terrain
 
 float deltaTime = 20;
 float oldTimeSinceStart = 0;
-int numberOfTrees = 500, numberOfRocks = 20, numberOfControls = 5, windowSize = 800;
+int numberOfTrees = 2000, numberOfRocks = 20, numberOfControls = 5, windowSize = 800;
 
 mat4 camMatrix, projectionMatrix;
 
 int time = 0;
-Model *m, *m2, *terrain, *groundSphere, *tree, *skyBox, *rock, *map, *circle;
+Model *m, *m2, *terrain, *groundSphere, *tree, *skyBox, *rock, *map, *circle, *circleFilled;
 GLuint program, skyBoxProgram;
-GLuint tex1, tex2, texBranch, coconut, skyBoxTex, stone, paper, black, brown, purple, controlPoint;
+GLuint tex1, tex2, texBranch, coconut, skyBoxTex, stone, paper, black, brown, purple, controlPoint, yellow;
 vec3 cam = {0, 5, 0};
 vec3 position = { 1, 0, 1 };
 vec3 lookAtPos = { 0, 0, 5 };
@@ -27,7 +27,7 @@ float distance = 20 * 0.018f;
 // mouse coordinates
 GLfloat xpos, ypos;
 vec3 right, direction;
-WorldObject *trees, *rocks, *controls, *controlPoints, *heightCurves;
+WorldObject *trees, *rocks, *controls, *controlPoints, *heightCurves, *openLandPoints;
 
 void handleKeyPress(){
 	//	printf("%f %f\n", distance, direction.x);
@@ -87,7 +87,7 @@ void handleCollisions() {
 
 void updateCameraPos(){
 	handleKeyPress();
-	position.y = getGroundY(position.x, position.z, &ttex) - 1;
+	position.y = getGroundY(position.x, position.z) - 1;
 	handleCollisions();
 }
 
@@ -102,7 +102,7 @@ void init(void)
 	skyBoxProgram = loadShaders("skybox.vert", "skybox.frag");
 	glUseProgram(program);
 	glUniformMatrix4fv(glGetUniformLocation(program, "projMatrix"), 1, GL_TRUE, projectionMatrix.m);
-	//	glUniform1i(glGetUniformLocation(program, "texUnit"), 0); // Texture unit 0
+	//glUniform1i(glGetUniformLocation(program, "texUnit"), 0); // Texture unit 0
 	LoadTGATextureSimple("maskros512.tga", &tex1);
 	LoadTGATextureSimple("SkyBox512.tga", &tex2);
 	LoadTGATextureSimple("grass.tga", &texBranch);
@@ -110,6 +110,7 @@ void init(void)
 	LoadTGATextureSimple("conc.tga", &stone);
 	LoadTGATextureSimple("paper.tga", &paper);
 	LoadTGATextureSimple("black.tga", &black);
+	LoadTGATextureSimple("yellow.tga", &yellow);
 	LoadTGATextureSimple("brown.tga", &brown);
 	LoadTGATextureSimple("purple.tga", &purple);
 	LoadTGATextureSimple("controlPoint.tga", &controlPoint);
@@ -122,6 +123,7 @@ void init(void)
 	groundSphere = LoadModelPlus("groundsphere.obj");
 	tree = LoadModelPlus("fir.obj");
 	circle = LoadModelPlus("circle.obj");
+	circleFilled = LoadModelPlus("circle-filled.obj");
 	rock = LoadModelPlus("stone.obj");
 	skyBox = LoadModelPlus("skybox.obj");
 	map = LoadModelPlus("cubeplus.obj");
@@ -133,9 +135,11 @@ void init(void)
 
 	glUseProgram(program);
 
-	trees = GenerateTrees(numberOfTrees);
 	rocks = GenerateRocks(numberOfRocks);
-	heightCurves = GenerateHeightCurves(&ttex);
+	trees = GenerateTrees(numberOfTrees);
+
+	heightCurves = GenerateHeightCurves();
+	openLandPoints = GenerateOpenLandPoints();
 
 	WorldObject* controlPoints = malloc(numberOfControls*25);
 	controlPoints[0] = rocks[0];
@@ -183,7 +187,7 @@ void drawRock(WorldObject obj){
 void drawControl(WorldObject obj){
 	double size = 0.4;
 	double height = 0.3;
-	double y = getGroundY(obj.x, obj.z + obj.r, &ttex);
+	double y = getGroundY(obj.x, obj.z + obj.r);
 	mat4 t = T(obj.x, y - height, obj.z + obj.r);
 	mat4 r = Rx(3.14);
 	mat4 s = S(size, size, size);
@@ -220,14 +224,15 @@ void drawTerrain(){
 float worldOnMapScale = 0.0039;
 
 void drawMapRock(mat4 m, WorldObject rockObject){
-	mat4 stonePos = Mult(m, T(-rockObject.x * worldOnMapScale + 0.5, 1, rockObject.z * worldOnMapScale - 0.5));
-	stonePos = Mult(stonePos, S(0.008 ,0.001,0.008));
-	draw(stonePos, rock, black, 0);
+	m = Mult(m, T(-rockObject.x * worldOnMapScale + 0.5, 3, rockObject.z * worldOnMapScale - 0.5));
+	m = Mult(m, Rx(M_PI/2));
+	m = Mult(m, S(0.35 ,0.35,0.35));
+	draw(m, circleFilled, black, 0);
 }
 
 void drawMapControl(mat4 m, WorldObject obj){
 	float scale = 0.07;
-	mat4 pos = Mult(m, T(-obj.x * worldOnMapScale + 0.5, 1, obj.z * worldOnMapScale - 0.5));
+	mat4 pos = Mult(m, T(-obj.x * worldOnMapScale + 0.5, 5, obj.z * worldOnMapScale - 0.5));
 	pos = Mult(pos, S(scale, scale, scale));
 	draw(pos, circle, purple, 0);
 }
@@ -256,9 +261,16 @@ void drawHeightCurve(mat4 m, WorldObject obj){
 	m = Mult(m, T(-obj.x * worldOnMapScale + 0.5, 1, obj.z * worldOnMapScale - 0.5));
 	m = Mult(m, S(scale, scale, scale));
 	draw(m, map, brown, 0);
-
-	//drawMapLine(m, obj1, obj2);
 }
+
+void drawOpenLand(mat4 m, WorldObject obj){
+	float scale = 0.5;
+	m = Mult(m, T(-obj.x * worldOnMapScale + 0.5, 1, obj.z * worldOnMapScale - 0.5));
+	m = Mult(m, Rx(M_PI/2));
+	m = Mult(m, S(scale, scale, scale));
+	draw(m, circleFilled, yellow, 0);
+}
+
 
 double a = 0;
 double aPrev = 0;
@@ -278,11 +290,12 @@ void drawMap(){
 	m = Mult(m, Rz(3.14/2));
 	m = Mult(m, Rx(-a ));
 	m = Mult(m, Rz(1));
-	m = Mult(m, S(0.5 ,0.01, 0.5));
+	m = Mult(m, S(0.5 ,0.001, 0.5));
 
 	draw(m, map, paper, 0);
 
 	int i;
+	for(i = 0; i < 2500; i++) drawOpenLand(m, openLandPoints[i]);
 	for(i = 0; i < 10000; i++) drawHeightCurve(m, heightCurves[i]);
 	for(i = 0; i < numberOfRocks; i++) drawMapRock(m, rocks[i]);
 	for(i = 0; i < numberOfControls; i++) drawMapControl(m, controls[i]);

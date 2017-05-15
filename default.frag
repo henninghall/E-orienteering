@@ -9,7 +9,6 @@ in vec2 texCoord;
 in vec3 Normal_cameraspace;
 in vec3 LightDirection_cameraspace;
 uniform bool showShadow;
-uniform bool hasOpenLand;
 
 in vec3 fragVert;
 

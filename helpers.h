@@ -23,9 +23,10 @@ typedef struct WorldObject {
 } WorldObject;
 
 
-float getGroundY(float xIn, float zIn, TextureData *tex);
+float getGroundY(float xIn, float zIn);
 Model* GenerateTerrain(TextureData *tex);
 WorldObject* GenerateTrees();
 WorldObject* GenerateRocks();
 WorldObject* GenerateControls();
-WorldObject* GenerateHeightCurves( TextureData *tex);
+WorldObject* GenerateHeightCurves();
+WorldObject* GenerateOpenLandPoints();

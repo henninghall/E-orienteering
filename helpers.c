@@ -12,6 +12,8 @@ GLfloat *texCoordArray;
 GLuint *indexArray;
 int triangleCount;
 
+float treeLine = 1.9;
+
 
 // http://stackoverflow.com/questions/2049582/how-to-determine-if-a-point-is-in-a-2d-triangle
 float sign (vec3 p1, vec3 p2, vec3 p3)
@@ -40,13 +42,13 @@ WorldObject* GenerateTrees(int numberOfTrees){
     xRandom = random() % maxDistance + 0.01;
     zRandom = random() % maxDistance + 0.01;
     rRandom = 1 + (random() % 3) * 0.4 - 0.2;
-    y = getGroundY(xRandom,	zRandom, NULL);
+    y = getGroundY(xRandom,	zRandom);
 
-    if(y > 3) {
+    if(y > treeLine) {
       WorldObject t = {xRandom, zRandom, rRandom, y};
       trees[i] = t;
-
     }
+    else i--;
   }
   return trees;
 }
@@ -62,7 +64,7 @@ WorldObject* GenerateControls(WorldObject *controlPoints, int numberOfControls){
     x = controlPoints[i].x;
     z = controlPoints[i].z;
     r = controlPoints[i].r;
-    y = getGroundY(x,	z, NULL);
+    y = getGroundY(x,	z);
     WorldObject cur = {x, z, r, y};
     controls[i] = cur;
   }
@@ -79,7 +81,7 @@ WorldObject* GenerateRocks(int numberOfRocks){
     x = random() % maxDistance + 0.01; // +0.01 to avoid borders
     z = random() % maxDistance + 0.01;
     r = 1.6 + (random() % 3) * 0.3;
-    y = getGroundY(x,	z, NULL);
+    y = getGroundY(x,	z);
     WorldObject w = {x, z, r, y};
     rocks[i] = w;
   }
@@ -97,9 +99,6 @@ Model* GenerateTerrain(TextureData *tex)
   texCoordArray = malloc(sizeof(GLfloat) * 2 * vertexCount);
   indexArray = malloc(sizeof(GLuint) * triangleCount*3);
 
-  //printf("bpp %d\n", tex->bpp);
-  //printf("tex->width %d\n", tex->width);
-  //printf("tex->height %d\n", tex->height);
   for (x = 0; x < tex->width; x++)
   for (z = 0; z < tex->height; z++)
   {
@@ -183,7 +182,7 @@ Model* GenerateTerrain(TextureData *tex)
     return model;
   }
 
-  WorldObject* GenerateHeightCurves(TextureData *tex){
+  WorldObject* GenerateHeightCurves(){
 
     WorldObject *curvePoints;
     curvePoints = malloc(sizeof(GLfloat) * triangleCount);
@@ -221,11 +220,45 @@ Model* GenerateTerrain(TextureData *tex)
   }
 
 
-  float getGroundY(float xIn, float zIn, TextureData *tex){
+
+    WorldObject* GenerateOpenLandPoints(){
+
+      WorldObject *openLandPoints;
+      openLandPoints = malloc(sizeof(GLfloat) * triangleCount);
+
+
+      int numberOfOpenLandPoints = 0;
+      int i;
+      for (i = 0; i < triangleCount*3; i+=6){
+
+        // each vertex
+        int v;
+        float minY;
+        vec3 vert;
+
+        // Each vertex per square
+        for (v = 0; v < 6; v++){
+          int vertexIndex = indexArray[i+v];
+          vert.x = vertexArray[vertexIndex*3 + 0];
+          vert.y = vertexArray[vertexIndex*3 + 1];
+          vert.z = vertexArray[vertexIndex*3 + 2];
+
+          if(v == 0 || vert.y < minY) minY = vert.y;
+        }
+
+        if(minY < treeLine && ((int)round(vert.x) % 3 == 0) && ((int)round(vert.z) % 3 == 0) ){
+            WorldObject cur = {vert.x, vert.z, 0};
+            openLandPoints[numberOfOpenLandPoints++] = cur;
+          }
+      }
+      return openLandPoints;
+    }
+
+
+  float getGroundY(float xIn, float zIn){
 
     int i;
     for (i = 0; i < triangleCount*3; i+=6){
-      //	printf("Square : %i\n", i);
 
       // each vertex
       int v;
