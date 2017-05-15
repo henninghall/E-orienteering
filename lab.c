@@ -9,14 +9,14 @@ TextureData ttex; // terrain
 
 float deltaTime = 20;
 float oldTimeSinceStart = 0;
-int numberOfTrees = 300, numberOfRocks = 20, numberOfControls = 6, windowSize = 800;
+int numberOfTrees = 2250, numberOfRocks = 20, numberOfControls = 6, windowSize = 800;
 
 mat4 camMatrix, projectionMatrix;
 
 int time = 0;
 Model *m, *m2, *terrain, *groundSphere, *tree, *skyBox, *rock, *map, *circle, *circleFilled;
 GLuint program, skyBoxProgram;
-GLuint tex1, tex2, texBranch, coconut, skyBoxTex, stone, paper, black, brown, purple, controlPoint, yellow;
+GLuint tex1, tex2, texBranch, coconut, skyBoxTex, stone, paper, black, brown, purple, controlPoint, yellow, fir;
 vec3 cam = {0, 5, 0};
 vec3 position = { 1, 0, 1 };
 vec3 lookAtPos = { 0, 0, 5 };
@@ -114,6 +114,7 @@ void init(void)
 	LoadTGATextureSimple("brown.tga", &brown);
 	LoadTGATextureSimple("purple.tga", &purple);
 	LoadTGATextureSimple("controlPoint.tga", &controlPoint);
+	LoadTGATextureSimple("fir.tga", &fir);
 
 	// Load terrain data
 	LoadTGATextureData("fft-terrain.tga", &ttex);
@@ -146,10 +147,8 @@ void init(void)
 	controlPoints[1] = rocks[9];
 	controlPoints[2] = rocks[5];
 	controlPoints[3] = rocks[6];
-
 	controlPoints[4] = rocks[2];
 	controlPoints[5] = rocks[15];
-
 	controlPoints[6] = rocks[4];
 	controlPoints[7] = rocks[3];
 
@@ -173,7 +172,7 @@ void drawTree1(WorldObject curTree){
 	mat4 r = Rx(3.14);
 	mat4 s = S(curTree.r * sizeConstant, curTree.r * sizeConstant, curTree.r * sizeConstant);
 	mat4 modelView = Mult(Mult(t, s),r);
-	draw(modelView, tree, coconut, 1);
+	draw(modelView, tree, fir, 1);
 }
 
 void drawRock(WorldObject obj){
@@ -189,8 +188,8 @@ void drawRock(WorldObject obj){
 void drawControl(WorldObject obj){
 	double size = 0.4;
 	double height = 0.3;
-	double y = getGroundY(obj.x, obj.z + obj.r);
-	mat4 t = T(obj.x, y - height, obj.z + obj.r);
+	double y = getGroundY(obj.x, obj.z - obj.r);
+	mat4 t = T(obj.x, y - height, obj.z - obj.r);
 	mat4 r = Rx(3.14);
 	mat4 s = S(size, size, size);
 	mat4 modelView = Mult(Mult(t, s),r);
@@ -297,7 +296,7 @@ void drawMap(){
 	draw(m, map, paper, 0);
 
 	int i;
-	for(i = 0; i < 2500; i++) drawOpenLand(m, openLandPoints[i]);
+	for(i = 0; i < 1500; i++) drawOpenLand(m, openLandPoints[i]);
 	for(i = 0; i < 10000; i++) drawHeightCurve(m, heightCurves[i]);
 	for(i = 0; i < numberOfRocks; i++) drawMapRock(m, rocks[i]);
 	for(i = 0; i < numberOfControls; i++) drawMapControl(m, controls[i]);

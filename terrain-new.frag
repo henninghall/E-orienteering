@@ -26,7 +26,7 @@ float shade;
 shade = dot(normalize(normal), light);
 
 // To prevent too dark
-if(shade < 0.2) shade = 0.19 + shade * 0.1;
+if(shade < 0.4) shade = 0.39 + shade * 0.3;
 
 if(showShadow == false) shade = 1.0;
 out_Color = texture(texUnit, texCoord) * vec4(shade, shade, shade, 1.0);
