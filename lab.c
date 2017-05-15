@@ -9,7 +9,7 @@ TextureData ttex; // terrain
 
 float deltaTime = 20;
 float oldTimeSinceStart = 0;
-int numberOfTrees = 2250, numberOfRocks = 20, numberOfControls = 6, windowSize = 800;
+int numberOfTrees = 250, numberOfRocks = 20, numberOfControls = 6, windowSize = 800;
 
 mat4 camMatrix, projectionMatrix;
 
@@ -68,6 +68,16 @@ void handleCollision(WorldObject obj) {
 	}
 }
 
+int nextControlToPunch = 0;
+void handleControlCollision(WorldObject obj) {
+	double xDiff, zDiff;
+	xDiff = fabs(obj.x - position.x);
+	zDiff = fabs(obj.z - position.z -obj.r);
+	if(xDiff < obj.r  && zDiff < obj.r ){
+		nextControlToPunch++;
+	}
+}
+
 void handleCollisions() {
 	int i;
 
@@ -83,6 +93,8 @@ void handleCollisions() {
 		handleCollision(obj);
 	}
 
+	// control
+	handleControlCollision(controls[nextControlToPunch]);
 }
 
 void updateCameraPos(){
@@ -231,6 +243,13 @@ void drawMapRock(mat4 m, WorldObject rockObject){
 	draw(m, circleFilled, black, 0);
 }
 
+void drawControlCount(mat4 m, int i){
+	m = Mult(m, T(-0.47 + 0.08 * i, 1, -0.55));
+	m = Mult(m, Rx(M_PI/2));
+	m = Mult(m, S(1.35 ,1.35,1.35));
+	draw(m, circleFilled, purple, 0);
+}
+
 void drawMapControl(mat4 m, WorldObject obj){
 	float scale = 0.07;
 	mat4 pos = Mult(m, T(-obj.x * worldOnMapScale + 0.5, 5, obj.z * worldOnMapScale - 0.5));
@@ -301,6 +320,7 @@ void drawMap(){
 	for(i = 0; i < numberOfRocks; i++) drawMapRock(m, rocks[i]);
 	for(i = 0; i < numberOfControls; i++) drawMapControl(m, controls[i]);
 	for(i = 0; i < numberOfControls - 1; i++) drawMapLine(m, controls[i], controls[i+1]);
+	for(i = 0; i < nextControlToPunch; i++) drawControlCount(m, i);
 }
 
 void drawSkyBox(){
