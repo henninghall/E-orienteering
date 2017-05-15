@@ -9,7 +9,7 @@ TextureData ttex; // terrain
 
 float deltaTime = 20;
 float oldTimeSinceStart = 0;
-int numberOfTrees = 2000, numberOfRocks = 20, numberOfControls = 5, windowSize = 800;
+int numberOfTrees = 200, numberOfRocks = 20, numberOfControls = 5, windowSize = 800;
 
 mat4 camMatrix, projectionMatrix;
 
@@ -264,8 +264,8 @@ void drawHeightCurve(mat4 m, WorldObject obj){
 }
 
 void drawOpenLand(mat4 m, WorldObject obj){
-	float scale = 0.5;
-	m = Mult(m, T(-obj.x * worldOnMapScale + 0.5, 1, obj.z * worldOnMapScale - 0.5));
+	float scale = 0.35;
+	m = Mult(m, T(-obj.x * worldOnMapScale + 0.503, 1, obj.z * worldOnMapScale - 0.503));
 	m = Mult(m, Rx(M_PI/2));
 	m = Mult(m, S(scale, scale, scale));
 	draw(m, circleFilled, yellow, 0);

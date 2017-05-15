@@ -220,39 +220,37 @@ Model* GenerateTerrain(TextureData *tex)
   }
 
 
+  WorldObject* GenerateOpenLandPoints(){
 
-    WorldObject* GenerateOpenLandPoints(){
+    WorldObject *openLandPoints;
+    openLandPoints = malloc(sizeof(GLfloat) * triangleCount);
+    int numberOfOpenLandPoints = 0;
+    int i;
+    for (i = 0; i < triangleCount*3; i+=6){
 
-      WorldObject *openLandPoints;
-      openLandPoints = malloc(sizeof(GLfloat) * triangleCount);
+      // each vertex
+      int v;
+      float minY;
+      vec3 vert;
 
+      // Each vertex per square
+      for (v = 0; v < 6; v++){
+        int vertexIndex = indexArray[i+v];
+        vert.x = vertexArray[vertexIndex*3 + 0];
+        vert.y = vertexArray[vertexIndex*3 + 1];
+        vert.z = vertexArray[vertexIndex*3 + 2];
 
-      int numberOfOpenLandPoints = 0;
-      int i;
-      for (i = 0; i < triangleCount*3; i+=6){
-
-        // each vertex
-        int v;
-        float minY;
-        vec3 vert;
-
-        // Each vertex per square
-        for (v = 0; v < 6; v++){
-          int vertexIndex = indexArray[i+v];
-          vert.x = vertexArray[vertexIndex*3 + 0];
-          vert.y = vertexArray[vertexIndex*3 + 1];
-          vert.z = vertexArray[vertexIndex*3 + 2];
-
-          if(v == 0 || vert.y < minY) minY = vert.y;
-        }
-
-        if(minY < treeLine && ((int)round(vert.x) % 3 == 0) && ((int)round(vert.z) % 3 == 0) ){
-            WorldObject cur = {vert.x, vert.z, 0};
-            openLandPoints[numberOfOpenLandPoints++] = cur;
-          }
+        if(v == 0 || vert.y < minY) minY = vert.y;
       }
-      return openLandPoints;
+
+
+      if(minY < treeLine && ((int)round(vert.x) % 3 == 0) && ((int)round(vert.z) % 3 == 0) ){
+        WorldObject cur = {vert.x, vert.z, 0};
+        openLandPoints[numberOfOpenLandPoints++] = cur;
+      }
     }
+    return openLandPoints;
+  }
 
 
   float getGroundY(float xIn, float zIn){
