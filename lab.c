@@ -9,7 +9,7 @@ TextureData ttex; // terrain
 
 float deltaTime = 20;
 float oldTimeSinceStart = 0;
-int numberOfTrees = 200, numberOfRocks = 20, numberOfControls = 5, windowSize = 800;
+int numberOfTrees = 300, numberOfRocks = 20, numberOfControls = 6, windowSize = 800;
 
 mat4 camMatrix, projectionMatrix;
 
@@ -142,12 +142,14 @@ void init(void)
 	openLandPoints = GenerateOpenLandPoints();
 
 	WorldObject* controlPoints = malloc(numberOfControls*25);
-	controlPoints[0] = rocks[0];
-	controlPoints[1] = rocks[1];
-	controlPoints[2] = rocks[12];
-	controlPoints[3] = rocks[2];
-	controlPoints[4] = rocks[3];
-	controlPoints[5] = rocks[6];
+	controlPoints[0] = rocks[8];
+	controlPoints[1] = rocks[9];
+	controlPoints[2] = rocks[5];
+	controlPoints[3] = rocks[6];
+
+	controlPoints[4] = rocks[2];
+	controlPoints[5] = rocks[15];
+
 	controlPoints[6] = rocks[4];
 	controlPoints[7] = rocks[3];
 
