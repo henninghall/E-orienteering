@@ -9,7 +9,7 @@ TextureData ttex; // terrain
 
 float deltaTime = 20;
 float oldTimeSinceStart = 0;
-int numberOfTrees = 1000, numberOfRocks = 20, numberOfControls = 5, windowSize = 800;
+int numberOfTrees = 500, numberOfRocks = 20, numberOfControls = 5, windowSize = 800;
 
 mat4 camMatrix, projectionMatrix;
 
@@ -392,6 +392,7 @@ int main(int argc, char **argv)
 	init();
 	glutTimerFunc(20, &timer, 0);
 	glutPassiveMotionFunc(mouse);
+
 	glutMainLoop();
 	exit(0);
 }

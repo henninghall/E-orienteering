@@ -39,10 +39,14 @@ WorldObject* GenerateTrees(int numberOfTrees){
   for(i = 0; i < numberOfTrees; i++){
     xRandom = random() % maxDistance + 0.01;
     zRandom = random() % maxDistance + 0.01;
-    rRandom = 0.8 + (random() % 3) * 0.4;
+    rRandom = 1 + (random() % 3) * 0.4 - 0.2;
     y = getGroundY(xRandom,	zRandom, NULL);
-    WorldObject t = {xRandom, zRandom, rRandom, y};
-    trees[i] = t;
+
+    if(y > 3) {
+      WorldObject t = {xRandom, zRandom, rRandom, y};
+      trees[i] = t;
+
+    }
   }
   return trees;
 }
@@ -296,6 +300,6 @@ Model* GenerateTerrain(TextureData *tex)
     }
 
     // Error no square found
-  //  printf("ERROR:No square found");
+    //  printf("ERROR:No square found");
     return 0;
   }
