@@ -1,5 +1,9 @@
 # E-orienteering
 
-An OpenGL orienteering game project
+Learning OpenGL by making an orienteering game project
 
-[[https://github.com/henninghall/E-orienteering/blob/master/branch.png]]
+![screenshot](screenshots/s1.png)
+![screenshot](screenshots/s2.png)
+![screenshot](screenshots/s3.png)
+![screenshot](screenshots/s4.png)
+![screenshot](screenshots/s5.png)
